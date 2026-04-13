@@ -1,12 +1,12 @@
 {
   "name": "degrande-calendar",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Degrande Calendar adds a week calendar bar to Logseq DB journals with fast day navigation and animated week browsing.",
   "author": "mugpet",
   "license": "MIT",
   "title": "Degrande Calendar",
   "repo": "mugpet/logseq-db-degrande-calendar",
-  "effect": false,
+  "effect": true,
   "main": "index.html",
   "scripts": {
     "check": "node -e \"JSON.parse(require('fs').readFileSync('package.json', 'utf8')); console.log('package.json ok')\"",
