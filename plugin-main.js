@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.7";
+const FALLBACK_PLUGIN_VERSION = "0.1.8";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -249,6 +249,49 @@ function getHostDocument() {
   } catch (_error) {
     return document;
   }
+}
+
+function getHostThemeMode() {
+  const hostDocument = getHostDocument();
+  const root = hostDocument?.documentElement;
+  const body = hostDocument?.body;
+  const explicitTheme = String(root?.dataset?.theme || body?.dataset?.theme || "").trim().toLowerCase();
+
+  if (explicitTheme === "dark" || explicitTheme === "light") {
+    return explicitTheme;
+  }
+
+  if (
+    root?.classList?.contains("dark-theme")
+    || root?.classList?.contains("theme-dark")
+    || body?.classList?.contains("dark-theme")
+    || body?.classList?.contains("theme-dark")
+  ) {
+    return "dark";
+  }
+
+  return "light";
+}
+
+function syncCalendarPanelTheme() {
+  const themeMode = getHostThemeMode();
+  const root = document.documentElement;
+  const body = document.body;
+
+  if (!root || !body) {
+    return;
+  }
+
+  root.dataset.theme = themeMode;
+  body.dataset.theme = themeMode;
+  root.classList.toggle("dark-theme", themeMode === "dark");
+  root.classList.toggle("theme-dark", themeMode === "dark");
+  root.classList.toggle("light-theme", themeMode !== "dark");
+  root.classList.toggle("theme-light", themeMode !== "dark");
+  body.classList.toggle("dark-theme", themeMode === "dark");
+  body.classList.toggle("theme-dark", themeMode === "dark");
+  body.classList.toggle("light-theme", themeMode !== "dark");
+  body.classList.toggle("theme-light", themeMode !== "dark");
 }
 
 function sanitizeHexColor(value, fallback = "#10b981") {
@@ -1463,6 +1506,8 @@ function syncCalendarSettingsPanel() {
     return;
   }
 
+  syncCalendarPanelTheme();
+
   const firstDaySelect = document.querySelector("[data-setting='firstDayOfWeek']");
   const viewSelect = document.querySelector("[data-setting='calendarView']");
   const visibilitySelect = document.querySelector("[data-setting='calendarVisibility']");
@@ -1521,6 +1566,7 @@ function mountCalendarSettingsPanel() {
   }
 
   app.innerHTML = buildCalendarSettingsPanelMarkup();
+  syncCalendarPanelTheme();
 
   app.addEventListener("click", (event) => {
     const actionTarget = event.target.closest("[data-action]");
@@ -1610,6 +1656,7 @@ function openCalendarSettings() {
     mountCalendarSettingsPanel();
   }
 
+  syncCalendarPanelTheme();
   logseq.setMainUIInlineStyle(MAIN_UI_INLINE_STYLE);
   logseq.showMainUI({ autoFocus: true });
   updateToolbarToggleUi();

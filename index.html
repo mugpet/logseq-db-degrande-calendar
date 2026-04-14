@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Degrande Calendar v0.1.7</title>
-    <meta name="degrande-calendar-version" content="0.1.7">
+    <title>Degrande Calendar v0.1.8</title>
+    <meta name="degrande-calendar-version" content="0.1.8">
     <style>
       :root {
         --dgc-panel-bg: rgba(248, 250, 255, 0.94);
@@ -263,29 +263,67 @@
         cursor: pointer;
       }
 
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --dgc-panel-bg: rgba(15, 23, 42, 0.94);
-          --dgc-panel-bg-strong: rgba(15, 23, 42, 0.88);
-          --dgc-panel-border: rgba(148, 163, 184, 0.2);
-          --dgc-panel-text: #e2e8f0;
-          --dgc-panel-muted: #94a3b8;
-          --dgc-panel-shadow: 0 24px 72px rgba(2, 6, 23, 0.42);
-        }
+      html[data-theme="dark"],
+      html.dark-theme,
+      html.theme-dark,
+      body[data-theme="dark"],
+      body.dark-theme,
+      body.theme-dark {
+        --dgc-panel-bg: rgba(15, 23, 42, 0.94);
+        --dgc-panel-bg-strong: rgba(15, 23, 42, 0.88);
+        --dgc-panel-border: rgba(148, 163, 184, 0.2);
+        --dgc-panel-text: #e2e8f0;
+        --dgc-panel-muted: #94a3b8;
+        --dgc-panel-shadow: 0 24px 72px rgba(2, 6, 23, 0.42);
+      }
 
-        .dgc-settings-window,
-        .dgc-settings-button,
-        .dgc-settings-select,
-        .dgc-settings-text-input,
-        .dgc-settings-color-input,
-        .dgc-settings-card {
-          background: var(--dgc-panel-bg-strong);
-          color: var(--dgc-panel-text);
-        }
+      html[data-theme="dark"] .dgc-settings-window,
+      html[data-theme="dark"] .dgc-settings-button,
+      html[data-theme="dark"] .dgc-settings-select,
+      html[data-theme="dark"] .dgc-settings-text-input,
+      html[data-theme="dark"] .dgc-settings-color-input,
+      html[data-theme="dark"] .dgc-settings-card,
+      html.dark-theme .dgc-settings-window,
+      html.dark-theme .dgc-settings-button,
+      html.dark-theme .dgc-settings-select,
+      html.dark-theme .dgc-settings-text-input,
+      html.dark-theme .dgc-settings-color-input,
+      html.dark-theme .dgc-settings-card,
+      html.theme-dark .dgc-settings-window,
+      html.theme-dark .dgc-settings-button,
+      html.theme-dark .dgc-settings-select,
+      html.theme-dark .dgc-settings-text-input,
+      html.theme-dark .dgc-settings-color-input,
+      html.theme-dark .dgc-settings-card,
+      body[data-theme="dark"] .dgc-settings-window,
+      body[data-theme="dark"] .dgc-settings-button,
+      body[data-theme="dark"] .dgc-settings-select,
+      body[data-theme="dark"] .dgc-settings-text-input,
+      body[data-theme="dark"] .dgc-settings-color-input,
+      body[data-theme="dark"] .dgc-settings-card,
+      body.dark-theme .dgc-settings-window,
+      body.dark-theme .dgc-settings-button,
+      body.dark-theme .dgc-settings-select,
+      body.dark-theme .dgc-settings-text-input,
+      body.dark-theme .dgc-settings-color-input,
+      body.dark-theme .dgc-settings-card,
+      body.theme-dark .dgc-settings-window,
+      body.theme-dark .dgc-settings-button,
+      body.theme-dark .dgc-settings-select,
+      body.theme-dark .dgc-settings-text-input,
+      body.theme-dark .dgc-settings-color-input,
+      body.theme-dark .dgc-settings-card {
+        background: var(--dgc-panel-bg-strong);
+        color: var(--dgc-panel-text);
+      }
 
-        .dgc-settings-preview-day.is-today {
-          background: color-mix(in srgb, var(--dgc-panel-today-preview) 22%, rgba(15, 23, 42, 0.88));
-        }
+      html[data-theme="dark"] .dgc-settings-preview-day.is-today,
+      html.dark-theme .dgc-settings-preview-day.is-today,
+      html.theme-dark .dgc-settings-preview-day.is-today,
+      body[data-theme="dark"] .dgc-settings-preview-day.is-today,
+      body.dark-theme .dgc-settings-preview-day.is-today,
+      body.theme-dark .dgc-settings-preview-day.is-today {
+        background: color-mix(in srgb, var(--dgc-panel-today-preview) 22%, rgba(15, 23, 42, 0.88));
       }
 
       @media (max-width: 720px) {
@@ -312,7 +350,7 @@
   </head>
   <body>
     <div id="app"></div>
-    <script src="./lsplugin.user.js?v=0.1.7"></script>
-    <script src="./plugin.js?v=0.1.7"></script>
+    <script src="./lsplugin.user.js?v=0.1.8"></script>
+    <script src="./plugin.js?v=0.1.8"></script>
   </body>
 </html>
