@@ -149,7 +149,7 @@ html[data-theme="dark"] .dgc-pagebar {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 2;
+  z-index: 36;
   width: 100vw;
   margin: 0;
   pointer-events: none;
