@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.9";
+const FALLBACK_PLUGIN_VERSION = "0.1.10";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -3092,23 +3092,32 @@ async function main() {
   const hostSession = hostWindow[HOST_SESSION_KEY] || (hostWindow[HOST_SESSION_KEY] = {});
 
   if (typeof logseq.useSettingsSchema === "function") {
-    logseq.useSettingsSchema(SETTINGS_SCHEMA);
+    try {
+      logseq.useSettingsSchema(SETTINGS_SCHEMA);
+    } catch (error) {
+      console.error("[Degrande Calendar] Failed to register settings schema", error);
+    }
   }
 
-  applyPluginSettings(logseq.settings || {});
+  try {
+    applyPluginSettings(logseq.settings || {});
+  } catch (error) {
+    console.error("[Degrande Calendar] Failed to apply stored settings", error);
+  }
 
   if (typeof logseq.onSettingsChanged === "function") {
     logseq.onSettingsChanged((newSettings) => {
-      applyPluginSettings(newSettings || {});
-      syncCalendarRuntimeStyle();
-      syncCalendarSettingsPanel();
+      try {
+        applyPluginSettings(newSettings || {});
+        syncCalendarRuntimeStyle();
+        syncCalendarSettingsPanel();
+      } catch (error) {
+        console.error("[Degrande Calendar] Failed to apply changed settings", error);
+      }
       void syncFromCurrentContext({ alignWeekToSelection: true });
     });
   }
 
-  await installStyles();
-  syncCalendarRuntimeStyle();
-  await ensureUserDateFormat();
   logseq.provideModel({
     openCalendarSettings() {
       openCalendarSettings();
@@ -3122,6 +3131,16 @@ async function main() {
       </a>
     `,
   });
+
+  await installStyles();
+
+  try {
+    syncCalendarRuntimeStyle();
+  } catch (error) {
+    console.error("[Degrande Calendar] Failed to sync runtime style", error);
+  }
+
+  await ensureUserDateFormat();
   registerPagebarItemSafely({
     key: PAGEBAR_ITEM_KEY,
     template: buildCalendarTemplate({ mountMode: "pagebar", rootId: PAGEBAR_ROOT_ID }),
