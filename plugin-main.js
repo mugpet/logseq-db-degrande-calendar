@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.12";
+const FALLBACK_PLUGIN_VERSION = "0.1.13";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -484,6 +484,10 @@ function getResolvedPresetCssValue(value) {
   }
 
   return preset.cssValue || preset.previewColor || "#10b981";
+}
+
+function getCalendarPresetCssValue(value) {
+  return getResolvedPresetCssValue(value);
 }
 
 function getResolvedPresetPreviewHex(value) {
