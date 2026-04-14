@@ -17,6 +17,7 @@
   --dgc-active-bg: color-mix(in srgb, var(--dgc-accent) 16%, var(--dgc-bg));
   --dgc-selected-text: var(--dgc-selected-text-override, var(--ls-primary-background-color, #ffffff));
   --dgc-today-bg: var(--dgc-today-bg-override, color-mix(in srgb, var(--dgc-today-accent) 32%, var(--dgc-bg)));
+  --dgc-today-text: var(--dgc-today-text-override, var(--dgc-text));
   --dgc-weekend-bg: var(--dgc-weekend-bg-override, color-mix(in srgb, var(--dgc-weekend-accent) 10%, var(--dgc-bg)));
   --dgc-weekend-text: var(--dgc-weekend-text-override, var(--dgc-text));
   --dgc-today-month-border: var(--dgc-today-month-border-override, var(--dgc-border-today));
@@ -56,6 +57,7 @@ html[data-theme="dark"] .dgc-pagebar {
   --dgc-active-bg: color-mix(in srgb, var(--dgc-accent) 16%, var(--dgc-bg));
   --dgc-selected-text: var(--dgc-selected-text-override, var(--ls-primary-background-color, #ffffff));
   --dgc-today-bg: var(--dgc-today-bg-override, color-mix(in srgb, var(--dgc-today-accent) 32%, var(--dgc-bg)));
+  --dgc-today-text: var(--dgc-today-text-override, var(--dgc-text));
   --dgc-weekend-bg: var(--dgc-weekend-bg-override, color-mix(in srgb, var(--dgc-weekend-accent) 10%, var(--dgc-bg)));
   --dgc-weekend-text: var(--dgc-weekend-text-override, var(--dgc-text));
   --dgc-today-month-border: var(--dgc-today-month-border-override, var(--dgc-border-today));
@@ -549,11 +551,11 @@ html[data-theme="dark"] .dgc-pagebar {
 .dgc-day.is-today:not(.is-active) .dgc-day-date,
 .dgc-day.is-today:not(.is-active) .dgc-day-week,
 .dgc-day.is-today:not(.is-active) .dgc-day-meta {
-  color: var(--dgc-text);
+  color: var(--dgc-today-text);
 }
 
 .dgc-day.is-today:not(.is-active) .dgc-day-name {
-  color: var(--dgc-text);
+  color: var(--dgc-today-text);
 }
 
 .dgc-day.is-active .dgc-day-date {

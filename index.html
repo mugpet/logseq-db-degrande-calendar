@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Degrande Calendar v0.1.14</title>
-    <meta name="degrande-calendar-version" content="0.1.14">
+    <title>Degrande Calendar v0.1.15</title>
+    <meta name="degrande-calendar-version" content="0.1.15">
     <style>
       :root {
         --dgc-panel-bg: rgba(248, 250, 255, 0.94);
@@ -17,6 +17,7 @@
         --dgc-panel-selected-preview: #10b981;
         --dgc-panel-selected-text: #f8fafc;
         --dgc-panel-today-preview: #10b981;
+        --dgc-panel-today-text: #132033;
         --dgc-panel-weekend-preview: color-mix(in srgb, #10b981 10%, white);
         --dgc-panel-weekend-text: #132033;
       }
@@ -203,6 +204,7 @@
 
       .dgc-settings-preview-day.is-today {
         background: color-mix(in srgb, var(--dgc-panel-today-preview) 24%, white);
+        color: var(--dgc-panel-today-text);
         position: relative;
       }
 
@@ -214,7 +216,7 @@
         bottom: 0;
         height: 4px;
         border-radius: 999px 999px 0 0;
-        background: var(--dgc-panel-today-preview);
+        background: var(--dgc-panel-today-text);
       }
 
       .dgc-settings-preview-day.is-weekend {
@@ -396,7 +398,7 @@
   </head>
   <body>
     <div id="app"></div>
-    <script src="./lsplugin.user.js?v=0.1.14"></script>
-    <script src="./plugin.js?v=0.1.14"></script>
+    <script src="./lsplugin.user.js?v=0.1.15"></script>
+    <script src="./plugin.js?v=0.1.15"></script>
   </body>
 </html>

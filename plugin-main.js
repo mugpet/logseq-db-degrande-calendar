@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.14";
+const FALLBACK_PLUGIN_VERSION = "0.1.15";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -1840,6 +1840,7 @@ function syncCalendarSettingsPanel() {
   document.documentElement.style.setProperty("--dgc-panel-selected-preview", getResolvedCalendarColorCssValue("selectedDay"));
   document.documentElement.style.setProperty("--dgc-panel-selected-text", getReadableTextColorForTarget("selectedDay"));
   document.documentElement.style.setProperty("--dgc-panel-today-preview", getResolvedCalendarColorCssValue("today"));
+  document.documentElement.style.setProperty("--dgc-panel-today-text", getReadableTextColorForTarget("today"));
   document.documentElement.style.setProperty("--dgc-panel-weekend-preview", getResolvedCalendarColorCssValue("weekend"));
   document.documentElement.style.setProperty("--dgc-panel-weekend-text", getReadableTextColorForTarget("weekend"));
 }
@@ -2532,6 +2533,7 @@ function syncCalendarRuntimeStyle() {
   const selectedAccent = getResolvedCalendarColorCssValue("selectedDay");
   const selectedText = getReadableTextColorForTarget("selectedDay");
   const todayAccent = getResolvedCalendarColorCssValue("today");
+  const todayText = getReadableTextColorForTarget("today");
   const weekendAccent = getResolvedCalendarColorCssValue("weekend");
   const weekendText = getReadableTextColorForTarget("weekend");
   const runtimeStyle = `
@@ -2540,10 +2542,11 @@ function syncCalendarRuntimeStyle() {
       --dgc-selected-text-override: ${selectedText};
       --dgc-today-accent-override: ${todayAccent};
       --dgc-today-bg-override: color-mix(in srgb, ${getResolvedCalendarBaseCssValue("today")} ${getCalendarColorState("today")?.alpha ?? 32}%, var(--dgc-bg));
+      --dgc-today-text-override: ${todayText};
       --dgc-weekend-accent-override: ${weekendAccent};
       --dgc-weekend-bg-override: ${weekendAccent};
       --dgc-weekend-text-override: ${weekendText};
-      --dgc-today-month-border-override: ${todayAccent};
+      --dgc-today-month-border-override: ${todayText};
     }
   `;
 
