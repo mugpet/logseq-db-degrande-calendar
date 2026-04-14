@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.8";
+const FALLBACK_PLUGIN_VERSION = "0.1.9";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -60,6 +60,7 @@ const CALENDAR_COLOR_TARGETS = [
       mode: "selectedDayColorMode",
       token: "selectedDayPresetToken",
       color: "selectedDayColor",
+      alpha: "selectedDayAlpha",
     },
   },
   {
@@ -70,6 +71,18 @@ const CALENDAR_COLOR_TARGETS = [
       mode: "todayColorMode",
       token: "todayPresetToken",
       color: "todayColor",
+      alpha: "todayAlpha",
+    },
+  },
+  {
+    key: "weekend",
+    label: "Weekend",
+    subtitle: "Applied to non-active weekend days in week and month view.",
+    settings: {
+      mode: "weekendColorMode",
+      token: "weekendPresetToken",
+      color: "weekendColor",
+      alpha: "weekendAlpha",
     },
   },
 ];
@@ -160,6 +173,13 @@ const SETTINGS_SCHEMA = [
     default: "acc-app-accent",
   },
   {
+    key: "selectedDayAlpha",
+    type: "string",
+    title: "Selected day opacity",
+    description: "Internal opacity for selected-day styling.",
+    default: "100",
+  },
+  {
     key: "todayColor",
     type: "string",
     title: "Today custom color",
@@ -181,6 +201,43 @@ const SETTINGS_SCHEMA = [
     title: "Today preset token",
     description: "Internal preset token for today's styling.",
     default: "acc-app-accent",
+  },
+  {
+    key: "todayAlpha",
+    type: "string",
+    title: "Today opacity",
+    description: "Internal opacity for today's styling.",
+    default: "32",
+  },
+  {
+    key: "weekendColor",
+    type: "string",
+    title: "Weekend custom color",
+    description: "Internal custom color for weekend styling.",
+    default: "#10b981",
+  },
+  {
+    key: "weekendColorMode",
+    type: "enum",
+    title: "Weekend color source",
+    description: "Internal source for weekend styling.",
+    default: "preset",
+    enumChoices: ["custom", "preset"],
+    enumPicker: "select",
+  },
+  {
+    key: "weekendPresetToken",
+    type: "string",
+    title: "Weekend preset token",
+    description: "Internal preset token for weekend styling.",
+    default: "acc-app-accent",
+  },
+  {
+    key: "weekendAlpha",
+    type: "string",
+    title: "Weekend opacity",
+    description: "Internal opacity for weekend styling.",
+    default: "10",
   },
 ];
 
@@ -219,9 +276,15 @@ const state = {
   selectedDayColorMode: "preset",
   selectedDayPresetToken: "acc-app-accent",
   selectedDayColor: "#10b981",
+  selectedDayAlpha: 100,
   todayColorMode: "preset",
   todayPresetToken: "acc-app-accent",
   todayColor: "#10b981",
+  todayAlpha: 32,
+  weekendColorMode: "preset",
+  weekendPresetToken: "acc-app-accent",
+  weekendColor: "#10b981",
+  weekendAlpha: 10,
   panelMounted: false,
   lastRuntimeStyleText: "",
 };
@@ -292,6 +355,9 @@ function syncCalendarPanelTheme() {
   body.classList.toggle("theme-dark", themeMode === "dark");
   body.classList.toggle("light-theme", themeMode !== "dark");
   body.classList.toggle("theme-light", themeMode !== "dark");
+  const hostAccent = getHostAccentCssValue();
+  root.style.setProperty("--ls-active-primary-color", hostAccent);
+  root.style.setProperty("--ls-link-text-color", hostAccent);
 }
 
 function sanitizeHexColor(value, fallback = "#10b981") {
@@ -308,9 +374,144 @@ function sanitizeHexColor(value, fallback = "#10b981") {
   return fallback;
 }
 
+function normalizeAlphaPercent(value, fallback = 100) {
+  const parsed = Number(value);
+
+  if (Number.isFinite(parsed)) {
+    return Math.min(100, Math.max(0, Math.round(parsed)));
+  }
+
+  return fallback;
+}
+
 function isHexColorValue(value) {
   const normalized = typeof value === "string" ? value.trim() : "";
   return /^#[0-9a-fA-F]{6}$/.test(normalized) || /^#[0-9a-fA-F]{3}$/.test(normalized);
+}
+
+function parseColorString(value) {
+  const normalized = String(value || "").trim();
+
+  if (!normalized) {
+    return null;
+  }
+
+  const hex = normalized.toLowerCase();
+
+  if (/^#[0-9a-f]{3}$/.test(hex)) {
+    return {
+      r: parseInt(`${hex[1]}${hex[1]}`, 16),
+      g: parseInt(`${hex[2]}${hex[2]}`, 16),
+      b: parseInt(`${hex[3]}${hex[3]}`, 16),
+      a: 1,
+    };
+  }
+
+  if (/^#[0-9a-f]{6}$/.test(hex)) {
+    return {
+      r: parseInt(hex.slice(1, 3), 16),
+      g: parseInt(hex.slice(3, 5), 16),
+      b: parseInt(hex.slice(5, 7), 16),
+      a: 1,
+    };
+  }
+
+  const rgbMatch = normalized.match(/^rgba?\(([^)]+)\)$/i);
+
+  if (!rgbMatch) {
+    return null;
+  }
+
+  const parts = rgbMatch[1].split(",").map((part) => part.trim());
+
+  if (parts.length < 3) {
+    return null;
+  }
+
+  return {
+    r: Math.min(255, Math.max(0, Number(parts[0]) || 0)),
+    g: Math.min(255, Math.max(0, Number(parts[1]) || 0)),
+    b: Math.min(255, Math.max(0, Number(parts[2]) || 0)),
+    a: parts.length >= 4 ? Math.min(1, Math.max(0, Number(parts[3]) || 0)) : 1,
+  };
+}
+
+function rgbToHex({ r, g, b }) {
+  return `#${[r, g, b].map((component) => Math.round(component).toString(16).padStart(2, "0")).join("")}`;
+}
+
+function colorStringToHex(value, fallback = "#10b981") {
+  const parsed = parseColorString(value);
+  return parsed ? rgbToHex(parsed) : fallback;
+}
+
+function getHostAccentCssValue() {
+  const hostDocument = getHostDocument();
+  const targets = [hostDocument?.documentElement, hostDocument?.body].filter(Boolean);
+
+  for (const target of targets) {
+    const computed = getHostWindow()?.getComputedStyle?.(target);
+
+    if (!computed) {
+      continue;
+    }
+
+    const activePrimary = computed.getPropertyValue("--ls-active-primary-color").trim();
+
+    if (activePrimary) {
+      return activePrimary;
+    }
+
+    const linkText = computed.getPropertyValue("--ls-link-text-color").trim();
+
+    if (linkText) {
+      return linkText;
+    }
+  }
+
+  return "#10b981";
+}
+
+function getResolvedPresetCssValue(value) {
+  const preset = typeof value === "string" ? getCalendarColorPreset(value) : value;
+
+  if (!preset) {
+    return "#10b981";
+  }
+
+  if (preset.token === "acc-app-accent") {
+    return getHostAccentCssValue();
+  }
+
+  return preset.cssValue || preset.previewColor || "#10b981";
+}
+
+function getResolvedPresetPreviewHex(value) {
+  const preset = typeof value === "string" ? getCalendarColorPreset(value) : value;
+
+  if (!preset) {
+    return "#10b981";
+  }
+
+  if (preset.token === "acc-app-accent") {
+    return colorStringToHex(getHostAccentCssValue());
+  }
+
+  return sanitizeHexColor(preset.previewColor || preset.cssValue || "#10b981");
+}
+
+function applyAlphaToCssColor(colorCssValue, alphaPercent) {
+  const normalizedAlpha = normalizeAlphaPercent(alphaPercent, 100);
+
+  if (normalizedAlpha >= 100) {
+    return colorCssValue;
+  }
+
+  if (normalizedAlpha <= 0) {
+    return "transparent";
+  }
+
+  return `color-mix(in srgb, ${colorCssValue} ${normalizedAlpha}%, transparent)`;
 }
 
 function getCalendarColorPreset(token) {
@@ -332,7 +533,22 @@ function getCalendarColorState(targetKey) {
     mode: state[target.settings.mode],
     token: state[target.settings.token],
     color: state[target.settings.color],
+    alpha: normalizeAlphaPercent(state[target.settings.alpha]),
   };
+}
+
+function getResolvedCalendarBaseCssValue(targetKey) {
+  const targetState = getCalendarColorState(targetKey);
+
+  if (!targetState) {
+    return "#10b981";
+  }
+
+  if (targetState.mode === "preset") {
+    return getCalendarPresetCssValue(targetState.token);
+  }
+
+  return sanitizeHexColor(targetState.color);
 }
 
 function getResolvedCalendarColorCssValue(targetKey) {
@@ -343,10 +559,10 @@ function getResolvedCalendarColorCssValue(targetKey) {
   }
 
   if (targetState.mode === "preset") {
-    return getCalendarColorPreset(targetState.token)?.cssValue || "#10b981";
+    return applyAlphaToCssColor(getResolvedPresetCssValue(targetState.token), targetState.alpha);
   }
 
-  return sanitizeHexColor(targetState.color);
+  return applyAlphaToCssColor(sanitizeHexColor(targetState.color), targetState.alpha);
 }
 
 function getResolvedCalendarColorPreview(targetKey) {
@@ -357,7 +573,7 @@ function getResolvedCalendarColorPreview(targetKey) {
   }
 
   if (targetState.mode === "preset") {
-    return getCalendarColorPreset(targetState.token)?.previewColor || "#10b981";
+    return getResolvedPresetPreviewHex(targetState.token);
   }
 
   return sanitizeHexColor(targetState.color);
@@ -372,6 +588,20 @@ function getReadableTextColor(colorValue) {
   return brightness >= 150 ? "#0f172a" : "#f8fafc";
 }
 
+function getReadableTextColorForTarget(targetKey) {
+  const previewColor = parseCssColor(getResolvedCalendarColorPreview(targetKey));
+  const alpha = (getCalendarColorState(targetKey)?.alpha ?? 100) / 100;
+  const background = getHostThemeMode() === "dark"
+    ? { r: 15, g: 23, b: 42, a: 1 }
+    : { r: 248, g: 250, b: 255, a: 1 };
+
+  if (!previewColor) {
+    return getHostThemeMode() === "dark" ? "#f8fafc" : "#0f172a";
+  }
+
+  return getReadableTextColor(rgbaToHex(blendColorOverBackground(previewColor, background, alpha)));
+}
+
 function getCalendarColorSelectionLabel(targetKey) {
   const target = getCalendarColorTargetConfig(targetKey);
   const targetState = getCalendarColorState(targetKey);
@@ -382,10 +612,10 @@ function getCalendarColorSelectionLabel(targetKey) {
 
   if (targetState.mode === "preset") {
     const preset = getCalendarColorPreset(targetState.token);
-    return `${target.label} · ${preset ? preset.label : "Preset"}`;
+    return `${target.label} · ${preset ? preset.label : "Preset"} · ${normalizeAlphaPercent(targetState.alpha)}%`;
   }
 
-  return `${target.label} · Custom ${sanitizeHexColor(targetState.color)}`;
+  return `${target.label} · Custom ${sanitizeHexColor(targetState.color)} · ${normalizeAlphaPercent(targetState.alpha)}%`;
 }
 
 function startOfLocalDay(value) {
@@ -455,11 +685,19 @@ function applyPluginSettings(settings) {
     : "custom";
   state.selectedDayPresetToken = getCalendarColorPreset(settings?.selectedDayPresetToken)?.token || "acc-app-accent";
   state.selectedDayColor = sanitizeHexColor(settings?.selectedDayColor);
+  state.selectedDayAlpha = normalizeAlphaPercent(settings?.selectedDayAlpha, 100);
   state.todayColorMode = settings?.todayColorMode === "preset" && getCalendarColorPreset(settings?.todayPresetToken)
     ? "preset"
     : "custom";
   state.todayPresetToken = getCalendarColorPreset(settings?.todayPresetToken)?.token || "acc-app-accent";
   state.todayColor = sanitizeHexColor(settings?.todayColor);
+  state.todayAlpha = normalizeAlphaPercent(settings?.todayAlpha, 32);
+  state.weekendColorMode = settings?.weekendColorMode === "preset" && getCalendarColorPreset(settings?.weekendPresetToken)
+    ? "preset"
+    : "custom";
+  state.weekendPresetToken = getCalendarColorPreset(settings?.weekendPresetToken)?.token || "acc-app-accent";
+  state.weekendColor = sanitizeHexColor(settings?.weekendColor);
+  state.weekendAlpha = normalizeAlphaPercent(settings?.weekendAlpha, 10);
 }
 
 function persistPluginSetting(partialSettings) {
@@ -507,12 +745,10 @@ function setCalendarPresetColor(targetKey, token) {
 
   state[target.settings.mode] = "preset";
   state[target.settings.token] = preset.token;
-  state[target.settings.color] = sanitizeHexColor(preset.previewColor);
 
   persistPluginSetting({
     [target.settings.mode]: "preset",
     [target.settings.token]: preset.token,
-    [target.settings.color]: sanitizeHexColor(preset.previewColor),
   });
 
   syncCalendarRuntimeStyle();
@@ -534,6 +770,25 @@ function setCalendarCustomColor(targetKey, colorValue) {
   persistPluginSetting({
     [target.settings.mode]: "custom",
     [target.settings.color]: normalized,
+  });
+
+  syncCalendarRuntimeStyle();
+  syncCalendarSettingsPanel();
+  queueRender();
+}
+
+function setCalendarColorAlpha(targetKey, alphaValue) {
+  const target = getCalendarColorTargetConfig(targetKey);
+
+  if (!target) {
+    return;
+  }
+
+  const normalized = normalizeAlphaPercent(alphaValue, 100);
+  state[target.settings.alpha] = normalized;
+
+  persistPluginSetting({
+    [target.settings.alpha]: String(normalized),
   });
 
   syncCalendarRuntimeStyle();
@@ -1371,7 +1626,7 @@ function escapeHtml(value) {
 
 function getCalendarPresetDisplayColor(value) {
   const preset = typeof value === "string" ? getCalendarColorPreset(value) : value;
-  return preset?.swatch || preset?.previewColor || "#10b981";
+  return getCalendarPresetCssValue(preset);
 }
 
 function buildCalendarPresetButtons(targetKey, group) {
@@ -1431,6 +1686,13 @@ function buildCalendarColorSection(targetKey) {
         <input class="dgc-settings-color-input" type="color" data-setting="${target.key}-color" value="${escapeHtml(getResolvedCalendarColorPreview(target.key))}">
         <input class="dgc-settings-text-input" type="text" inputmode="text" data-setting="${target.key}-hex" value="${escapeHtml(getResolvedCalendarColorPreview(target.key))}" placeholder="#10b981">
       </div>
+      <label class="dgc-settings-alpha-field">
+        <span>Opacity</span>
+        <div class="dgc-settings-alpha-row">
+          <input class="dgc-settings-alpha-range" type="range" min="0" max="100" step="1" data-setting="${target.key}-alpha" value="${getCalendarColorState(target.key)?.alpha ?? 100}">
+          <strong data-role="${target.key}-alpha-value">${getCalendarColorState(target.key)?.alpha ?? 100}%</strong>
+        </div>
+      </label>
     </section>
   `;
 }
@@ -1492,6 +1754,11 @@ function buildCalendarSettingsPanelMarkup() {
                 <span class="dgc-settings-preview-date">15</span>
                 <span class="dgc-settings-preview-meta">•</span>
               </button>
+              <button class="dgc-settings-preview-day is-weekend" type="button" tabindex="-1" aria-hidden="true">
+                <span class="dgc-settings-preview-name">Sat</span>
+                <span class="dgc-settings-preview-date">17</span>
+                <span class="dgc-settings-preview-meta">•</span>
+              </button>
             </div>
           </section>
           ${CALENDAR_COLOR_TARGETS.map((target) => buildCalendarColorSection(target.key)).join("")}
@@ -1529,6 +1796,8 @@ function syncCalendarSettingsPanel() {
     const label = document.querySelector(`[data-role='${target.key}-label']`);
     const colorInput = document.querySelector(`[data-setting='${target.key}-color']`);
     const hexInput = document.querySelector(`[data-setting='${target.key}-hex']`);
+    const alphaInput = document.querySelector(`[data-setting='${target.key}-alpha']`);
+    const alphaValue = document.querySelector(`[data-role='${target.key}-alpha-value']`);
     const targetState = getCalendarColorState(target.key);
 
     if (label) {
@@ -1543,6 +1812,14 @@ function syncCalendarSettingsPanel() {
       hexInput.value = previewColor;
     }
 
+    if (alphaInput) {
+      alphaInput.value = String(targetState?.alpha ?? 100);
+    }
+
+    if (alphaValue) {
+      alphaValue.textContent = `${targetState?.alpha ?? 100}%`;
+    }
+
     document.querySelectorAll(`[data-action='set-calendar-preset'][data-target-key='${target.key}']`).forEach((button) => {
       button.style.setProperty("--dgc-settings-swatch-color", getCalendarPresetDisplayColor(button.dataset.value));
       button.classList.toggle("is-active", targetState?.mode === "preset" && targetState.token === button.dataset.value);
@@ -1550,8 +1827,9 @@ function syncCalendarSettingsPanel() {
   });
 
   document.documentElement.style.setProperty("--dgc-panel-selected-preview", getResolvedCalendarColorCssValue("selectedDay"));
-  document.documentElement.style.setProperty("--dgc-panel-selected-text", getReadableTextColor(getResolvedCalendarColorPreview("selectedDay")));
+  document.documentElement.style.setProperty("--dgc-panel-selected-text", getReadableTextColorForTarget("selectedDay"));
   document.documentElement.style.setProperty("--dgc-panel-today-preview", getResolvedCalendarColorCssValue("today"));
+  document.documentElement.style.setProperty("--dgc-panel-weekend-preview", getResolvedCalendarColorCssValue("weekend"));
 }
 
 function mountCalendarSettingsPanel() {
@@ -1611,6 +1889,10 @@ function mountCalendarSettingsPanel() {
         setCalendarCustomColor(colorTarget.key, target.value);
       }
 
+      if (target.matches(`[data-setting='${colorTarget.key}-alpha']`)) {
+        setCalendarColorAlpha(colorTarget.key, target.value);
+      }
+
       if (target.matches(`[data-setting='${colorTarget.key}-hex']`)) {
         if (isHexColorValue(target.value)) {
           const normalized = sanitizeHexColor(target.value);
@@ -1631,6 +1913,10 @@ function mountCalendarSettingsPanel() {
     CALENDAR_COLOR_TARGETS.forEach((colorTarget) => {
       if (target.matches(`[data-setting='${colorTarget.key}-color']`)) {
         setCalendarCustomColor(colorTarget.key, target.value);
+      }
+
+      if (target.matches(`[data-setting='${colorTarget.key}-alpha']`)) {
+        setCalendarColorAlpha(colorTarget.key, target.value);
       }
 
       if (target.matches(`[data-setting='${colorTarget.key}-hex']`) && isHexColorValue(target.value)) {
@@ -2232,14 +2518,18 @@ async function installStyles() {
 function syncCalendarRuntimeStyle() {
   const hostDocument = getHostDocument();
   const selectedAccent = getResolvedCalendarColorCssValue("selectedDay");
-  const selectedText = getReadableTextColor(getResolvedCalendarColorPreview("selectedDay"));
+  const selectedText = getReadableTextColorForTarget("selectedDay");
   const todayAccent = getResolvedCalendarColorCssValue("today");
+  const weekendAccent = getResolvedCalendarColorCssValue("weekend");
   const runtimeStyle = `
     :root {
       --dgc-selected-accent-override: ${selectedAccent};
       --dgc-selected-text-override: ${selectedText};
       --dgc-today-accent-override: ${todayAccent};
-      --dgc-today-bg-override: color-mix(in srgb, ${todayAccent} 32%, var(--dgc-bg));
+      --dgc-today-bg-override: color-mix(in srgb, ${getResolvedCalendarBaseCssValue("today")} ${getCalendarColorState("today")?.alpha ?? 32}%, var(--dgc-bg));
+      --dgc-weekend-accent-override: ${weekendAccent};
+      --dgc-weekend-bg-override: color-mix(in srgb, ${getResolvedCalendarBaseCssValue("weekend")} ${getCalendarColorState("weekend")?.alpha ?? 10}%, var(--dgc-bg));
+      --dgc-today-month-border-override: ${todayAccent};
     }
   `;
 

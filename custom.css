@@ -11,11 +11,14 @@
   --dgc-accent-strong: var(--ls-link-text-color, #0f766e);
   --dgc-selected-accent: var(--dgc-selected-accent-override, var(--ls-link-text-color, #0f766e));
   --dgc-today-accent: var(--dgc-today-accent-override, var(--ls-link-text-color, #0f766e));
+  --dgc-weekend-accent: var(--dgc-weekend-accent-override, var(--ls-link-text-color, #0f766e));
   --dgc-chip-bg: var(--ls-secondary-background-color, var(--ls-primary-background-color, transparent));
   --dgc-chip-bg-alt: var(--ls-tertiary-background-color, var(--ls-secondary-background-color, var(--ls-primary-background-color, transparent)));
   --dgc-active-bg: color-mix(in srgb, var(--dgc-accent) 16%, var(--dgc-bg));
   --dgc-selected-text: var(--dgc-selected-text-override, var(--ls-primary-background-color, #ffffff));
   --dgc-today-bg: var(--dgc-today-bg-override, color-mix(in srgb, var(--dgc-today-accent) 32%, var(--dgc-bg)));
+  --dgc-weekend-bg: var(--dgc-weekend-bg-override, color-mix(in srgb, var(--dgc-weekend-accent) 10%, var(--dgc-bg)));
+  --dgc-today-month-border: var(--dgc-today-month-border-override, var(--dgc-border-today));
   --dgc-shadow: 0 3px 8px rgba(15, 23, 42, 0.05);
   display: block;
   container-type: inline-size;
@@ -46,11 +49,14 @@ html[data-theme="dark"] .dgc-pagebar {
   --dgc-accent-strong: var(--ls-link-text-color, #5eead4);
   --dgc-selected-accent: var(--dgc-selected-accent-override, var(--ls-link-text-color, #5eead4));
   --dgc-today-accent: var(--dgc-today-accent-override, var(--ls-link-text-color, #5eead4));
+  --dgc-weekend-accent: var(--dgc-weekend-accent-override, var(--ls-link-text-color, #5eead4));
   --dgc-chip-bg: var(--ls-secondary-background-color, var(--ls-primary-background-color, transparent));
   --dgc-chip-bg-alt: var(--ls-tertiary-background-color, var(--ls-secondary-background-color, var(--ls-primary-background-color, transparent)));
   --dgc-active-bg: color-mix(in srgb, var(--dgc-accent) 16%, var(--dgc-bg));
   --dgc-selected-text: var(--dgc-selected-text-override, var(--ls-primary-background-color, #ffffff));
   --dgc-today-bg: var(--dgc-today-bg-override, color-mix(in srgb, var(--dgc-today-accent) 32%, var(--dgc-bg)));
+  --dgc-weekend-bg: var(--dgc-weekend-bg-override, color-mix(in srgb, var(--dgc-weekend-accent) 10%, var(--dgc-bg)));
+  --dgc-today-month-border: var(--dgc-today-month-border-override, var(--dgc-border-today));
   --dgc-shadow: 0 4px 10px rgba(2, 6, 23, 0.14);
 }
 
@@ -357,7 +363,7 @@ html[data-theme="dark"] .dgc-pagebar {
 }
 
 .dgc-day.is-weekend:not(.is-active) {
-  background: color-mix(in srgb, var(--dgc-accent) 12%, var(--dgc-bg));
+  background: var(--dgc-weekend-bg);
 }
 
 .dgc-day:hover .dgc-day-name {
@@ -384,7 +390,19 @@ html[data-theme="dark"] .dgc-pagebar {
 }
 
 .dgc-month-day.is-weekend:not(.is-active) {
-  background: color-mix(in srgb, var(--dgc-accent) 8%, var(--dgc-bg));
+  background: var(--dgc-weekend-bg);
+}
+
+.dgc-pagebar.is-month-view .dgc-month-day.is-today::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 0;
+  height: 4px;
+  border-radius: 999px 999px 0 0;
+  background: var(--dgc-today-month-border);
+  pointer-events: none;
 }
 
 .dgc-month-day:first-child {

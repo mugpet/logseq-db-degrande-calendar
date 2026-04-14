@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Degrande Calendar v0.1.8</title>
-    <meta name="degrande-calendar-version" content="0.1.8">
+    <title>Degrande Calendar v0.1.9</title>
+    <meta name="degrande-calendar-version" content="0.1.9">
     <style>
       :root {
         --dgc-panel-bg: rgba(248, 250, 255, 0.94);
@@ -17,6 +17,7 @@
         --dgc-panel-selected-preview: #10b981;
         --dgc-panel-selected-text: #f8fafc;
         --dgc-panel-today-preview: #10b981;
+        --dgc-panel-weekend-preview: color-mix(in srgb, #10b981 10%, white);
       }
 
       html,
@@ -70,7 +71,8 @@
       .dgc-settings-eyebrow,
       .dgc-settings-card-eyebrow,
       .dgc-settings-palette-label,
-      .dgc-settings-field span {
+      .dgc-settings-field span,
+      .dgc-settings-alpha-field span {
         margin: 0;
         font-size: 11px;
         font-weight: 800;
@@ -200,6 +202,22 @@
 
       .dgc-settings-preview-day.is-today {
         background: color-mix(in srgb, var(--dgc-panel-today-preview) 24%, white);
+        position: relative;
+      }
+
+      .dgc-settings-preview-day.is-today::after {
+        content: "";
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        bottom: 0;
+        height: 4px;
+        border-radius: 999px 999px 0 0;
+        background: var(--dgc-panel-today-preview);
+      }
+
+      .dgc-settings-preview-day.is-weekend {
+        background: var(--dgc-panel-weekend-preview);
       }
 
       .dgc-settings-preview-name,
@@ -251,6 +269,23 @@
         display: grid;
         grid-template-columns: 48px minmax(0, 1fr);
         gap: 10px;
+      }
+
+      .dgc-settings-alpha-field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .dgc-settings-alpha-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .dgc-settings-alpha-range {
+        width: 100%;
+        margin: 0;
       }
 
       .dgc-settings-color-input {
@@ -326,6 +361,15 @@
         background: color-mix(in srgb, var(--dgc-panel-today-preview) 22%, rgba(15, 23, 42, 0.88));
       }
 
+      html[data-theme="dark"] .dgc-settings-preview-day.is-weekend,
+      html.dark-theme .dgc-settings-preview-day.is-weekend,
+      html.theme-dark .dgc-settings-preview-day.is-weekend,
+      body[data-theme="dark"] .dgc-settings-preview-day.is-weekend,
+      body.dark-theme .dgc-settings-preview-day.is-weekend,
+      body.theme-dark .dgc-settings-preview-day.is-weekend {
+        background: var(--dgc-panel-weekend-preview);
+      }
+
       @media (max-width: 720px) {
         .dgc-settings-shell {
           padding: 12px;
@@ -350,7 +394,7 @@
   </head>
   <body>
     <div id="app"></div>
-    <script src="./lsplugin.user.js?v=0.1.8"></script>
-    <script src="./plugin.js?v=0.1.8"></script>
+    <script src="./lsplugin.user.js?v=0.1.9"></script>
+    <script src="./plugin.js?v=0.1.9"></script>
   </body>
 </html>
