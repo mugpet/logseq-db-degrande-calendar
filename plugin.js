@@ -1,5 +1,5 @@
 const STARTUP_ERROR_PREFIX = "[Degrande Calendar] Failed to start";
-const FALLBACK_PLUGIN_VERSION = "0.1.11";
+const FALLBACK_PLUGIN_VERSION = "0.1.12";
 const MAIN_SCRIPT_DATA_ATTRIBUTE = "data-degrande-calendar-main";
 
 let pluginStartupPromise = null;

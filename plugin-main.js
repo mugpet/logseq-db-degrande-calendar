@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.11";
+const FALLBACK_PLUGIN_VERSION = "0.1.12";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -599,7 +599,14 @@ function getReadableTextColorForTarget(targetKey) {
     return getHostThemeMode() === "dark" ? "#f8fafc" : "#0f172a";
   }
 
-  return getReadableTextColor(rgbaToHex(blendColorOverBackground(previewColor, background, alpha)));
+  const effectiveAlpha = Math.min(1, Math.max(0, (previewColor.a ?? 1) * alpha));
+  const blended = {
+    r: background.r + ((previewColor.r - background.r) * effectiveAlpha),
+    g: background.g + ((previewColor.g - background.g) * effectiveAlpha),
+    b: background.b + ((previewColor.b - background.b) * effectiveAlpha),
+  };
+
+  return getReadableTextColor(rgbToHex(blended));
 }
 
 function getCalendarColorSelectionLabel(targetKey) {
