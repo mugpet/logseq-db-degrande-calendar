@@ -18,6 +18,7 @@
   --dgc-selected-text: var(--dgc-selected-text-override, var(--ls-primary-background-color, #ffffff));
   --dgc-today-bg: var(--dgc-today-bg-override, color-mix(in srgb, var(--dgc-today-accent) 32%, var(--dgc-bg)));
   --dgc-weekend-bg: var(--dgc-weekend-bg-override, color-mix(in srgb, var(--dgc-weekend-accent) 10%, var(--dgc-bg)));
+  --dgc-weekend-text: var(--dgc-weekend-text-override, var(--dgc-text));
   --dgc-today-month-border: var(--dgc-today-month-border-override, var(--dgc-border-today));
   --dgc-shadow: 0 3px 8px rgba(15, 23, 42, 0.05);
   display: block;
@@ -56,6 +57,7 @@ html[data-theme="dark"] .dgc-pagebar {
   --dgc-selected-text: var(--dgc-selected-text-override, var(--ls-primary-background-color, #ffffff));
   --dgc-today-bg: var(--dgc-today-bg-override, color-mix(in srgb, var(--dgc-today-accent) 32%, var(--dgc-bg)));
   --dgc-weekend-bg: var(--dgc-weekend-bg-override, color-mix(in srgb, var(--dgc-weekend-accent) 10%, var(--dgc-bg)));
+  --dgc-weekend-text: var(--dgc-weekend-text-override, var(--dgc-text));
   --dgc-today-month-border: var(--dgc-today-month-border-override, var(--dgc-border-today));
   --dgc-shadow: 0 4px 10px rgba(2, 6, 23, 0.14);
 }
@@ -391,6 +393,20 @@ html[data-theme="dark"] .dgc-pagebar {
 
 .dgc-month-day.is-weekend:not(.is-active) {
   background: var(--dgc-weekend-bg);
+}
+
+.dgc-day.is-weekend:not(.is-active):not(.is-today) .dgc-day-date,
+.dgc-day.is-weekend:not(.is-active):not(.is-today) .dgc-day-week,
+.dgc-day.is-weekend:not(.is-active):not(.is-today) .dgc-day-name,
+.dgc-day.is-weekend:not(.is-active):not(.is-today) .dgc-day-meta {
+  color: var(--dgc-weekend-text);
+}
+
+.dgc-day.is-weekend:not(.is-active):not(.is-today):hover .dgc-day-date,
+.dgc-day.is-weekend:not(.is-active):not(.is-today):hover .dgc-day-week,
+.dgc-day.is-weekend:not(.is-active):not(.is-today):hover .dgc-day-name,
+.dgc-day.is-weekend:not(.is-active):not(.is-today):hover .dgc-day-meta {
+  color: var(--dgc-weekend-text);
 }
 
 .dgc-pagebar.is-month-view .dgc-month-day.is-today::after {
