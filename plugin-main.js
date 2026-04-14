@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.10";
+const FALLBACK_PLUGIN_VERSION = "0.1.11";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -589,7 +589,7 @@ function getReadableTextColor(colorValue) {
 }
 
 function getReadableTextColorForTarget(targetKey) {
-  const previewColor = parseCssColor(getResolvedCalendarColorPreview(targetKey));
+  const previewColor = parseColorString(getResolvedCalendarColorPreview(targetKey));
   const alpha = (getCalendarColorState(targetKey)?.alpha ?? 100) / 100;
   const background = getHostThemeMode() === "dark"
     ? { r: 15, g: 23, b: 42, a: 1 }
