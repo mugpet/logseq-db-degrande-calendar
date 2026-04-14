@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.6";
+const FALLBACK_PLUGIN_VERSION = "0.1.7";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -14,6 +14,21 @@ const ROOT_BINDING_KEY = "__degrandeCalendarBound";
 const ROOT_REFS_KEY = "__degrandeCalendarRefs";
 const STYLE_RESOURCE = "custom.css";
 const PREVIEW_ROOT_ID = "degrande-calendar-preview-popup";
+const RUNTIME_STYLE_ELEMENT_ID = "degrande-calendar-runtime-style";
+const MAIN_UI_INLINE_STYLE = {
+  position: "fixed",
+  top: "0",
+  right: "0",
+  bottom: "0",
+  left: "0",
+  zIndex: 999,
+  width: "100vw",
+  height: "100vh",
+  maxWidth: "100vw",
+  maxHeight: "100vh",
+  overflow: "hidden",
+  background: "transparent",
+};
 
 const DAY_NAME_FORMATTER = new Intl.DateTimeFormat(undefined, { weekday: "short" });
 const DAY_DATE_FORMATTER = new Intl.DateTimeFormat(undefined, { day: "numeric" });
@@ -36,6 +51,63 @@ const VISIBILITY_MODE_CHOICES = [
   "Everywhere",
   "Only journals and day pages",
 ];
+const CALENDAR_COLOR_TARGETS = [
+  {
+    key: "selectedDay",
+    label: "Selected Day",
+    subtitle: "Applied to the active day in week and month view.",
+    settings: {
+      mode: "selectedDayColorMode",
+      token: "selectedDayPresetToken",
+      color: "selectedDayColor",
+    },
+  },
+  {
+    key: "today",
+    label: "Today",
+    subtitle: "Applied to today's non-active highlight treatment.",
+    settings: {
+      mode: "todayColorMode",
+      token: "todayPresetToken",
+      color: "todayColor",
+    },
+  },
+];
+const CALENDAR_COLOR_TARGET_MAP = Object.fromEntries(CALENDAR_COLOR_TARGETS.map((target) => [target.key, target]));
+const CALENDAR_COLOR_PRESETS = [
+  { token: "red", label: "Red", group: "preset", swatch: "#ef4444", cssValue: "#ef4444", previewColor: "#ef4444" },
+  { token: "orange", label: "Orange", group: "preset", swatch: "#fb923c", cssValue: "#fb923c", previewColor: "#fb923c" },
+  { token: "yellow", label: "Yellow", group: "preset", swatch: "#eab308", cssValue: "#eab308", previewColor: "#eab308" },
+  { token: "green", label: "Green", group: "preset", swatch: "#22c55e", cssValue: "#22c55e", previewColor: "#22c55e" },
+  { token: "teal", label: "Teal", group: "preset", swatch: "#14b8a6", cssValue: "#14b8a6", previewColor: "#14b8a6" },
+  { token: "blue", label: "Blue", group: "preset", swatch: "#1f7ae0", cssValue: "#1f7ae0", previewColor: "#1f7ae0" },
+  { token: "indigo", label: "Indigo", group: "preset", swatch: "#6366f1", cssValue: "#6366f1", previewColor: "#6366f1" },
+  { token: "purple", label: "Purple", group: "preset", swatch: "#a855f7", cssValue: "#a855f7", previewColor: "#a855f7" },
+  { token: "pink", label: "Pink", group: "preset", swatch: "#ec4899", cssValue: "#ec4899", previewColor: "#ec4899" },
+  { token: "grey", label: "Grey", group: "preset", swatch: "#9ca3af", cssValue: "#9ca3af", previewColor: "#9ca3af" },
+  { token: "mint", label: "Mint", group: "preset", swatch: "#34d399", cssValue: "#34d399", previewColor: "#34d399" },
+  { token: "rose", label: "Rose", group: "preset", swatch: "#f43f5e", cssValue: "#f43f5e", previewColor: "#f43f5e" },
+  { token: "amber", label: "Amber", group: "preset", swatch: "#f59e0b", cssValue: "#f59e0b", previewColor: "#f59e0b" },
+  { token: "sky", label: "Sky", group: "preset", swatch: "#38bdf8", cssValue: "#38bdf8", previewColor: "#38bdf8" },
+  { token: "lime", label: "Lime", group: "preset", swatch: "#84cc16", cssValue: "#84cc16", previewColor: "#84cc16" },
+  { token: "slate", label: "Slate", group: "preset", swatch: "#64748b", cssValue: "#64748b", previewColor: "#64748b" },
+  { token: "acc-app-accent", label: "Logseq Accent", group: "accent", swatch: "var(--ls-active-primary-color, var(--ls-link-text-color, #10b981))", cssValue: "var(--ls-active-primary-color, var(--ls-link-text-color, #10b981))", previewColor: "#10b981" },
+  { token: "acc-lt-blue", label: "Accent Lt Blue", group: "accent", swatch: "#b0c7ea", cssValue: "#8aa6d3", previewColor: "#8aa6d3" },
+  { token: "acc-coral", label: "Accent Coral", group: "accent", swatch: "#f49e8c", cssValue: "#de7c68", previewColor: "#de7c68" },
+  { token: "acc-salmon", label: "Accent Salmon", group: "accent", swatch: "#f49898", cssValue: "#de7a7a", previewColor: "#de7a7a" },
+  { token: "acc-rose", label: "Accent Rose", group: "accent", swatch: "#f68fbb", cssValue: "#d96798", previewColor: "#d96798" },
+  { token: "acc-blush", label: "Accent Blush", group: "accent", swatch: "#e992cc", cssValue: "#d16ead", previewColor: "#d16ead" },
+  { token: "acc-lilac", label: "Accent Lilac", group: "accent", swatch: "#e09bec", cssValue: "#c372d3", previewColor: "#c372d3" },
+  { token: "acc-lavender", label: "Accent Lavender", group: "accent", swatch: "#c69ee4", cssValue: "#aa7cd1", previewColor: "#aa7cd1" },
+  { token: "acc-indigo", label: "Accent Indigo", group: "accent", swatch: "#866cee", cssValue: "#6d51d9", previewColor: "#6d51d9" },
+  { token: "acc-periwinkle", label: "Accent Periwinkle", group: "accent", swatch: "#93a2f7", cssValue: "#7889e4", previewColor: "#7889e4" },
+  { token: "acc-sky", label: "Accent Sky", group: "accent", swatch: "#71b2f7", cssValue: "#4a90de", previewColor: "#4a90de" },
+  { token: "acc-cyan", label: "Accent Cyan", group: "accent", swatch: "#7acee1", cssValue: "#4caec5", previewColor: "#4caec5" },
+  { token: "acc-teal", label: "Accent Teal", group: "accent", swatch: "#7ecdbe", cssValue: "#59af9c", previewColor: "#59af9c" },
+  { token: "acc-sage", label: "Accent Sage", group: "accent", swatch: "#9fd2af", cssValue: "#7eb390", previewColor: "#7eb390" },
+  { token: "acc-apricot", label: "Accent Apricot", group: "accent", swatch: "#fca877", cssValue: "#df8a57", previewColor: "#df8a57" },
+];
+const CALENDAR_COLOR_PRESET_MAP = Object.fromEntries(CALENDAR_COLOR_PRESETS.map((preset) => [preset.token, preset]));
 const SETTINGS_SCHEMA = [
   {
     key: "firstDayOfWeek",
@@ -63,6 +135,52 @@ const SETTINGS_SCHEMA = [
     default: "Everywhere",
     enumChoices: VISIBILITY_MODE_CHOICES,
     enumPicker: "select",
+  },
+  {
+    key: "selectedDayColor",
+    type: "string",
+    title: "Selected day custom color",
+    description: "Internal custom color for the selected-day styling.",
+    default: "#10b981",
+  },
+  {
+    key: "selectedDayColorMode",
+    type: "enum",
+    title: "Selected day color source",
+    description: "Internal source for selected-day color styling.",
+    default: "preset",
+    enumChoices: ["custom", "preset"],
+    enumPicker: "select",
+  },
+  {
+    key: "selectedDayPresetToken",
+    type: "string",
+    title: "Selected day preset token",
+    description: "Internal preset token for selected-day styling.",
+    default: "acc-app-accent",
+  },
+  {
+    key: "todayColor",
+    type: "string",
+    title: "Today custom color",
+    description: "Internal custom color for today's styling.",
+    default: "#10b981",
+  },
+  {
+    key: "todayColorMode",
+    type: "enum",
+    title: "Today color source",
+    description: "Internal source for today's styling.",
+    default: "preset",
+    enumChoices: ["custom", "preset"],
+    enumPicker: "select",
+  },
+  {
+    key: "todayPresetToken",
+    type: "string",
+    title: "Today preset token",
+    description: "Internal preset token for today's styling.",
+    default: "acc-app-accent",
   },
 ];
 
@@ -98,6 +216,14 @@ const state = {
   previewRequestToken: 0,
   viewMode: "week",
   calendarExpanded: true,
+  selectedDayColorMode: "preset",
+  selectedDayPresetToken: "acc-app-accent",
+  selectedDayColor: "#10b981",
+  todayColorMode: "preset",
+  todayPresetToken: "acc-app-accent",
+  todayColor: "#10b981",
+  panelMounted: false,
+  lastRuntimeStyleText: "",
 };
 
 function getPluginVersion() {
@@ -123,6 +249,100 @@ function getHostDocument() {
   } catch (_error) {
     return document;
   }
+}
+
+function sanitizeHexColor(value, fallback = "#10b981") {
+  const normalized = typeof value === "string" ? value.trim() : "";
+
+  if (/^#[0-9a-fA-F]{3}$/.test(normalized)) {
+    return `#${normalized.slice(1).split("").map((character) => `${character}${character}`).join("")}`.toLowerCase();
+  }
+
+  if (/^#[0-9a-fA-F]{6}$/.test(normalized)) {
+    return normalized.toLowerCase();
+  }
+
+  return fallback;
+}
+
+function isHexColorValue(value) {
+  const normalized = typeof value === "string" ? value.trim() : "";
+  return /^#[0-9a-fA-F]{6}$/.test(normalized) || /^#[0-9a-fA-F]{3}$/.test(normalized);
+}
+
+function getCalendarColorPreset(token) {
+  return CALENDAR_COLOR_PRESET_MAP[String(token || "").trim()] || null;
+}
+
+function getCalendarColorTargetConfig(targetKey) {
+  return CALENDAR_COLOR_TARGET_MAP[String(targetKey || "").trim()] || null;
+}
+
+function getCalendarColorState(targetKey) {
+  const target = getCalendarColorTargetConfig(targetKey);
+
+  if (!target) {
+    return null;
+  }
+
+  return {
+    mode: state[target.settings.mode],
+    token: state[target.settings.token],
+    color: state[target.settings.color],
+  };
+}
+
+function getResolvedCalendarColorCssValue(targetKey) {
+  const targetState = getCalendarColorState(targetKey);
+
+  if (!targetState) {
+    return "#10b981";
+  }
+
+  if (targetState.mode === "preset") {
+    return getCalendarColorPreset(targetState.token)?.cssValue || "#10b981";
+  }
+
+  return sanitizeHexColor(targetState.color);
+}
+
+function getResolvedCalendarColorPreview(targetKey) {
+  const targetState = getCalendarColorState(targetKey);
+
+  if (!targetState) {
+    return "#10b981";
+  }
+
+  if (targetState.mode === "preset") {
+    return getCalendarColorPreset(targetState.token)?.previewColor || "#10b981";
+  }
+
+  return sanitizeHexColor(targetState.color);
+}
+
+function getReadableTextColor(colorValue) {
+  const hex = sanitizeHexColor(colorValue);
+  const red = parseInt(hex.slice(1, 3), 16);
+  const green = parseInt(hex.slice(3, 5), 16);
+  const blue = parseInt(hex.slice(5, 7), 16);
+  const brightness = ((red * 299) + (green * 587) + (blue * 114)) / 1000;
+  return brightness >= 150 ? "#0f172a" : "#f8fafc";
+}
+
+function getCalendarColorSelectionLabel(targetKey) {
+  const target = getCalendarColorTargetConfig(targetKey);
+  const targetState = getCalendarColorState(targetKey);
+
+  if (!target || !targetState) {
+    return "Color";
+  }
+
+  if (targetState.mode === "preset") {
+    const preset = getCalendarColorPreset(targetState.token);
+    return `${target.label} · ${preset ? preset.label : "Preset"}`;
+  }
+
+  return `${target.label} · Custom ${sanitizeHexColor(targetState.color)}`;
 }
 
 function startOfLocalDay(value) {
@@ -186,6 +406,96 @@ function applyPluginSettings(settings) {
   state.visibilityMode = settings?.calendarVisibility === "Only journals and day pages"
     ? "journals-only"
     : "everywhere";
+  state.calendarExpanded = true;
+  state.selectedDayColorMode = settings?.selectedDayColorMode === "preset" && getCalendarColorPreset(settings?.selectedDayPresetToken)
+    ? "preset"
+    : "custom";
+  state.selectedDayPresetToken = getCalendarColorPreset(settings?.selectedDayPresetToken)?.token || "acc-app-accent";
+  state.selectedDayColor = sanitizeHexColor(settings?.selectedDayColor);
+  state.todayColorMode = settings?.todayColorMode === "preset" && getCalendarColorPreset(settings?.todayPresetToken)
+    ? "preset"
+    : "custom";
+  state.todayPresetToken = getCalendarColorPreset(settings?.todayPresetToken)?.token || "acc-app-accent";
+  state.todayColor = sanitizeHexColor(settings?.todayColor);
+}
+
+function persistPluginSetting(partialSettings) {
+  if (typeof logseq.updateSettings !== "function") {
+    return;
+  }
+
+  try {
+    logseq.updateSettings(partialSettings);
+  } catch (error) {
+    console.error("[Degrande Calendar] Failed to persist settings", error);
+  }
+}
+
+function setFirstDayOfWeekSetting(nextValue) {
+  const normalized = FIRST_DAY_CHOICES.includes(nextValue) ? nextValue : "Monday";
+  state.firstDayOfWeek = normalizeFirstDayOfWeek(normalized);
+  persistPluginSetting({ firstDayOfWeek: normalized });
+  void syncFromCurrentContext({ alignWeekToSelection: true });
+}
+
+function setCalendarViewSetting(nextValue) {
+  const normalized = nextValue === "Month" ? "Month" : "Week";
+  state.viewMode = normalized === "Month" ? "month" : "week";
+  persistPluginSetting({ calendarView: normalized });
+  queueRender();
+}
+
+function setCalendarVisibilitySetting(nextValue) {
+  const normalized = nextValue === "Only journals and day pages"
+    ? "Only journals and day pages"
+    : "Everywhere";
+  state.visibilityMode = normalized === "Only journals and day pages" ? "journals-only" : "everywhere";
+  persistPluginSetting({ calendarVisibility: normalized });
+  void syncFromCurrentContext({ alignWeekToSelection: true });
+}
+
+function setCalendarPresetColor(targetKey, token) {
+  const target = getCalendarColorTargetConfig(targetKey);
+  const preset = getCalendarColorPreset(token);
+
+  if (!target || !preset) {
+    return;
+  }
+
+  state[target.settings.mode] = "preset";
+  state[target.settings.token] = preset.token;
+  state[target.settings.color] = sanitizeHexColor(preset.previewColor);
+
+  persistPluginSetting({
+    [target.settings.mode]: "preset",
+    [target.settings.token]: preset.token,
+    [target.settings.color]: sanitizeHexColor(preset.previewColor),
+  });
+
+  syncCalendarRuntimeStyle();
+  syncCalendarSettingsPanel();
+  queueRender();
+}
+
+function setCalendarCustomColor(targetKey, colorValue) {
+  const target = getCalendarColorTargetConfig(targetKey);
+
+  if (!target) {
+    return;
+  }
+
+  const normalized = sanitizeHexColor(colorValue);
+  state[target.settings.mode] = "custom";
+  state[target.settings.color] = normalized;
+
+  persistPluginSetting({
+    [target.settings.mode]: "custom",
+    [target.settings.color]: normalized,
+  });
+
+  syncCalendarRuntimeStyle();
+  syncCalendarSettingsPanel();
+  queueRender();
 }
 
 function startOfMonth(value) {
@@ -959,10 +1269,10 @@ function updateToolbarToggleUi() {
     return;
   }
 
-  const label = state.calendarExpanded ? "Hide calendar" : "Show calendar";
+  const label = "Open Degrande Calendar settings";
   button.setAttribute("title", label);
   button.setAttribute("aria-label", label);
-  button.classList.toggle("is-active", state.calendarExpanded);
+  button.classList.toggle("is-active", Boolean(logseq.isMainUIVisible));
 }
 
 function formatWeekLabel(weekStart) {
@@ -1014,6 +1324,302 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/\"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function getCalendarPresetDisplayColor(value) {
+  const preset = typeof value === "string" ? getCalendarColorPreset(value) : value;
+  return preset?.swatch || preset?.previewColor || "#10b981";
+}
+
+function buildCalendarPresetButtons(targetKey, group) {
+  return CALENDAR_COLOR_PRESETS
+    .filter((preset) => preset.group === group)
+    .map((preset) => {
+      const targetState = getCalendarColorState(targetKey);
+      const isActive = targetState?.mode === "preset" && targetState.token === preset.token;
+      const isSpecial = preset.token === "acc-app-accent";
+
+      return `
+        <button
+          class="dgc-settings-swatch${isActive ? " is-active" : ""}${isSpecial ? " is-special" : ""}"
+          type="button"
+          data-action="set-calendar-preset"
+          data-target-key="${targetKey}"
+          data-value="${preset.token}"
+          title="${escapeHtml(preset.label)}"
+          aria-label="Set ${escapeHtml(getCalendarColorTargetConfig(targetKey)?.label || "calendar")} color to ${escapeHtml(preset.label)}"
+          style="--dgc-settings-swatch-color:${getCalendarPresetDisplayColor(preset)};"
+        >${isSpecial ? "A" : ""}</button>
+      `;
+    })
+    .join("");
+}
+
+function buildCalendarColorSection(targetKey) {
+  const target = getCalendarColorTargetConfig(targetKey);
+
+  if (!target) {
+    return "";
+  }
+
+  return `
+    <section class="dgc-settings-card">
+      <div class="dgc-settings-card-head">
+        <div>
+          <p class="dgc-settings-card-eyebrow">Color</p>
+          <h2>${escapeHtml(target.label)}</h2>
+          <p class="dgc-settings-card-copy">${escapeHtml(target.subtitle)}</p>
+        </div>
+        <span class="dgc-settings-pill" data-role="${target.key}-label">${escapeHtml(getCalendarColorSelectionLabel(target.key))}</span>
+      </div>
+      <div class="dgc-settings-palette-group">
+        <div class="dgc-settings-palette-label">Preset colors</div>
+        <div class="dgc-settings-swatch-grid">
+          ${buildCalendarPresetButtons(target.key, "preset")}
+        </div>
+      </div>
+      <div class="dgc-settings-palette-group">
+        <div class="dgc-settings-palette-label">Accent colors</div>
+        <div class="dgc-settings-swatch-grid dgc-settings-swatch-grid-wide">
+          ${buildCalendarPresetButtons(target.key, "accent")}
+        </div>
+      </div>
+      <div class="dgc-settings-color-row">
+        <input class="dgc-settings-color-input" type="color" data-setting="${target.key}-color" value="${escapeHtml(getResolvedCalendarColorPreview(target.key))}">
+        <input class="dgc-settings-text-input" type="text" inputmode="text" data-setting="${target.key}-hex" value="${escapeHtml(getResolvedCalendarColorPreview(target.key))}" placeholder="#10b981">
+      </div>
+    </section>
+  `;
+}
+
+function buildCalendarSettingsPanelMarkup() {
+  return `
+    <div class="dgc-settings-shell">
+      <section class="dgc-settings-window" aria-label="Degrande Calendar settings panel">
+        <header class="dgc-settings-header">
+          <div>
+            <p class="dgc-settings-eyebrow">Logseq DB Calendar</p>
+            <div class="dgc-settings-title-row">
+              <h1>Degrande Calendar</h1>
+              <span class="dgc-settings-version">v${escapeHtml(PLUGIN_VERSION)}</span>
+            </div>
+            <p class="dgc-settings-subtitle">Tune calendar behavior plus selected-day and today colors. Changes apply directly to the graph.</p>
+          </div>
+          <div class="dgc-settings-header-actions">
+            <button class="dgc-settings-button dgc-settings-button-secondary" type="button" data-action="close-panel">Close</button>
+          </div>
+        </header>
+        <div class="dgc-settings-main">
+          <section class="dgc-settings-card">
+            <div class="dgc-settings-card-head">
+              <div>
+                <p class="dgc-settings-card-eyebrow">Behavior</p>
+                <h2>Calendar controls</h2>
+                <p class="dgc-settings-card-copy">These replace the old toolbar toggle behavior and keep the pagebar always available.</p>
+              </div>
+            </div>
+            <div class="dgc-settings-field-grid">
+              <label class="dgc-settings-field">
+                <span>First day of week</span>
+                <select class="dgc-settings-select" data-setting="firstDayOfWeek">
+                  ${FIRST_DAY_CHOICES.map((choice) => `<option value="${escapeHtml(choice)}">${escapeHtml(choice)}</option>`).join("")}
+                </select>
+              </label>
+              <label class="dgc-settings-field">
+                <span>Default view</span>
+                <select class="dgc-settings-select" data-setting="calendarView">
+                  ${VIEW_MODE_CHOICES.map((choice) => `<option value="${escapeHtml(choice)}">${escapeHtml(choice)}</option>`).join("")}
+                </select>
+              </label>
+              <label class="dgc-settings-field dgc-settings-field-wide">
+                <span>Visibility</span>
+                <select class="dgc-settings-select" data-setting="calendarVisibility">
+                  ${VISIBILITY_MODE_CHOICES.map((choice) => `<option value="${escapeHtml(choice)}">${escapeHtml(choice)}</option>`).join("")}
+                </select>
+              </label>
+            </div>
+            <div class="dgc-settings-preview-strip">
+              <button class="dgc-settings-preview-day is-selected" type="button" tabindex="-1" aria-hidden="true">
+                <span class="dgc-settings-preview-name">Wed</span>
+                <span class="dgc-settings-preview-date">14</span>
+                <span class="dgc-settings-preview-meta">•</span>
+              </button>
+              <button class="dgc-settings-preview-day is-today" type="button" tabindex="-1" aria-hidden="true">
+                <span class="dgc-settings-preview-name">Thu</span>
+                <span class="dgc-settings-preview-date">15</span>
+                <span class="dgc-settings-preview-meta">•</span>
+              </button>
+            </div>
+          </section>
+          ${CALENDAR_COLOR_TARGETS.map((target) => buildCalendarColorSection(target.key)).join("")}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function syncCalendarSettingsPanel() {
+  if (!state.panelMounted) {
+    return;
+  }
+
+  const firstDaySelect = document.querySelector("[data-setting='firstDayOfWeek']");
+  const viewSelect = document.querySelector("[data-setting='calendarView']");
+  const visibilitySelect = document.querySelector("[data-setting='calendarVisibility']");
+
+  if (firstDaySelect) {
+    firstDaySelect.value = FIRST_DAY_CHOICES[state.firstDayOfWeek] || "Monday";
+  }
+
+  if (viewSelect) {
+    viewSelect.value = state.viewMode === "month" ? "Month" : "Week";
+  }
+
+  if (visibilitySelect) {
+    visibilitySelect.value = state.visibilityMode === "journals-only" ? "Only journals and day pages" : "Everywhere";
+  }
+
+  CALENDAR_COLOR_TARGETS.forEach((target) => {
+    const previewColor = getResolvedCalendarColorPreview(target.key);
+    const label = document.querySelector(`[data-role='${target.key}-label']`);
+    const colorInput = document.querySelector(`[data-setting='${target.key}-color']`);
+    const hexInput = document.querySelector(`[data-setting='${target.key}-hex']`);
+    const targetState = getCalendarColorState(target.key);
+
+    if (label) {
+      label.textContent = getCalendarColorSelectionLabel(target.key);
+    }
+
+    if (colorInput) {
+      colorInput.value = previewColor;
+    }
+
+    if (hexInput && hexInput !== document.activeElement) {
+      hexInput.value = previewColor;
+    }
+
+    document.querySelectorAll(`[data-action='set-calendar-preset'][data-target-key='${target.key}']`).forEach((button) => {
+      button.style.setProperty("--dgc-settings-swatch-color", getCalendarPresetDisplayColor(button.dataset.value));
+      button.classList.toggle("is-active", targetState?.mode === "preset" && targetState.token === button.dataset.value);
+    });
+  });
+
+  document.documentElement.style.setProperty("--dgc-panel-selected-preview", getResolvedCalendarColorCssValue("selectedDay"));
+  document.documentElement.style.setProperty("--dgc-panel-selected-text", getReadableTextColor(getResolvedCalendarColorPreview("selectedDay")));
+  document.documentElement.style.setProperty("--dgc-panel-today-preview", getResolvedCalendarColorCssValue("today"));
+}
+
+function mountCalendarSettingsPanel() {
+  if (state.panelMounted) {
+    return;
+  }
+
+  const app = document.getElementById("app");
+
+  if (!app) {
+    throw new Error("Missing #app root for Degrande Calendar settings panel");
+  }
+
+  app.innerHTML = buildCalendarSettingsPanelMarkup();
+
+  app.addEventListener("click", (event) => {
+    const actionTarget = event.target.closest("[data-action]");
+
+    if (!actionTarget) {
+      return;
+    }
+
+    if (actionTarget.dataset.action === "close-panel") {
+      closeCalendarSettings();
+      return;
+    }
+
+    if (actionTarget.dataset.action === "set-calendar-preset") {
+      setCalendarPresetColor(actionTarget.dataset.targetKey, actionTarget.dataset.value);
+    }
+  });
+
+  app.addEventListener("change", (event) => {
+    const target = event.target;
+
+    if (target.matches("[data-setting='firstDayOfWeek']")) {
+      setFirstDayOfWeekSetting(target.value);
+      syncCalendarSettingsPanel();
+      return;
+    }
+
+    if (target.matches("[data-setting='calendarView']")) {
+      setCalendarViewSetting(target.value);
+      syncCalendarSettingsPanel();
+      return;
+    }
+
+    if (target.matches("[data-setting='calendarVisibility']")) {
+      setCalendarVisibilitySetting(target.value);
+      syncCalendarSettingsPanel();
+      return;
+    }
+
+    CALENDAR_COLOR_TARGETS.forEach((colorTarget) => {
+      if (target.matches(`[data-setting='${colorTarget.key}-color']`)) {
+        setCalendarCustomColor(colorTarget.key, target.value);
+      }
+
+      if (target.matches(`[data-setting='${colorTarget.key}-hex']`)) {
+        if (isHexColorValue(target.value)) {
+          const normalized = sanitizeHexColor(target.value);
+          target.value = normalized;
+          setCalendarCustomColor(colorTarget.key, normalized);
+        } else {
+          target.value = getResolvedCalendarColorPreview(colorTarget.key);
+        }
+      }
+    });
+
+    syncCalendarSettingsPanel();
+  });
+
+  app.addEventListener("input", (event) => {
+    const target = event.target;
+
+    CALENDAR_COLOR_TARGETS.forEach((colorTarget) => {
+      if (target.matches(`[data-setting='${colorTarget.key}-color']`)) {
+        setCalendarCustomColor(colorTarget.key, target.value);
+      }
+
+      if (target.matches(`[data-setting='${colorTarget.key}-hex']`) && isHexColorValue(target.value)) {
+        setCalendarCustomColor(colorTarget.key, target.value.trim());
+      }
+    });
+
+    syncCalendarSettingsPanel();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && logseq.isMainUIVisible) {
+      closeCalendarSettings();
+    }
+  });
+
+  state.panelMounted = true;
+  syncCalendarSettingsPanel();
+}
+
+function openCalendarSettings() {
+  if (!state.panelMounted) {
+    mountCalendarSettingsPanel();
+  }
+
+  logseq.setMainUIInlineStyle(MAIN_UI_INLINE_STYLE);
+  logseq.showMainUI({ autoFocus: true });
+  updateToolbarToggleUi();
+  syncCalendarSettingsPanel();
+}
+
+function closeCalendarSettings() {
+  logseq.setMainUIInlineStyle({});
+  logseq.hideMainUI({ restoreEditingCursor: true });
+  updateToolbarToggleUi();
 }
 
 function flattenPreviewBlocks(blocks, result = [], depth = 0) {
@@ -1576,6 +2182,45 @@ async function installStyles() {
   }
 }
 
+function syncCalendarRuntimeStyle() {
+  const hostDocument = getHostDocument();
+  const selectedAccent = getResolvedCalendarColorCssValue("selectedDay");
+  const selectedText = getReadableTextColor(getResolvedCalendarColorPreview("selectedDay"));
+  const todayAccent = getResolvedCalendarColorCssValue("today");
+  const runtimeStyle = `
+    :root {
+      --dgc-selected-accent-override: ${selectedAccent};
+      --dgc-selected-text-override: ${selectedText};
+      --dgc-today-accent-override: ${todayAccent};
+      --dgc-today-bg-override: color-mix(in srgb, ${todayAccent} 32%, var(--dgc-bg));
+    }
+  `;
+
+  if (runtimeStyle === state.lastRuntimeStyleText) {
+    return;
+  }
+
+  try {
+    let styleElement = hostDocument.getElementById(RUNTIME_STYLE_ELEMENT_ID);
+
+    if (!styleElement) {
+      styleElement = hostDocument.createElement("style");
+      styleElement.id = RUNTIME_STYLE_ELEMENT_ID;
+      (hostDocument.head || hostDocument.documentElement).appendChild(styleElement);
+    }
+
+    styleElement.textContent = runtimeStyle;
+  } catch (error) {
+    if (typeof logseq.provideStyle === "function") {
+      logseq.provideStyle(runtimeStyle);
+    } else {
+      console.error("[Degrande Calendar] Failed to apply runtime color style", error);
+    }
+  }
+
+  state.lastRuntimeStyleText = runtimeStyle;
+}
+
 function queueRender() {
   if (state.renderTimer) {
     clearTimeout(state.renderTimer);
@@ -1583,6 +2228,7 @@ function queueRender() {
 
   state.renderTimer = setTimeout(() => {
     state.renderTimer = null;
+    syncCalendarRuntimeStyle();
     renderWeekBar();
   }, 16);
 }
@@ -2063,9 +2709,7 @@ function registerCommands(pluginId) {
       label: "Degrande Calendar: open settings",
     },
     () => {
-      if (typeof logseq.showSettingsUI === "function") {
-        logseq.showSettingsUI();
-      }
+      openCalendarSettings();
     }
   );
 }
@@ -2081,6 +2725,8 @@ function bindAppEvents() {
 
   if (typeof logseq.App.onThemeModeChanged === "function") {
     logseq.App.onThemeModeChanged(() => {
+      syncCalendarRuntimeStyle();
+      syncCalendarSettingsPanel();
       queueRender();
     });
   }
@@ -2117,21 +2763,24 @@ async function main() {
   if (typeof logseq.onSettingsChanged === "function") {
     logseq.onSettingsChanged((newSettings) => {
       applyPluginSettings(newSettings || {});
+      syncCalendarRuntimeStyle();
+      syncCalendarSettingsPanel();
       void syncFromCurrentContext({ alignWeekToSelection: true });
     });
   }
 
   await installStyles();
+  syncCalendarRuntimeStyle();
   await ensureUserDateFormat();
   logseq.provideModel({
-    toggleCalendarToolbar() {
-      toggleCalendarExpanded();
+    openCalendarSettings() {
+      openCalendarSettings();
     },
   });
   registerToolbarItemSafely({
     key: TOOLBAR_ITEM_KEY,
     template: `
-      <a class="button" id="${TOOLBAR_TOGGLE_ID}" data-on-click="toggleCalendarToolbar" title="Hide calendar" aria-label="Hide calendar">
+      <a class="button" id="${TOOLBAR_TOGGLE_ID}" data-on-click="openCalendarSettings" title="Open Degrande Calendar settings" aria-label="Open Degrande Calendar settings">
         <i class="ti ti-calendar-event"></i>
       </a>
     `,

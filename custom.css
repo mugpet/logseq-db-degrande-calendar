@@ -3,16 +3,19 @@
   --dgc-bg-strong: color-mix(in srgb, var(--ls-secondary-background-color, var(--ls-primary-background-color, rgba(255, 255, 255, 0.92))) 84%, transparent);
   --dgc-border: var(--ls-border-color, rgba(15, 23, 42, 0.12));
   --dgc-border-hover: var(--ls-border-color, rgba(15, 23, 42, 0.18));
-  --dgc-border-active: var(--ls-link-text-color, #0f766e);
-  --dgc-border-today: var(--ls-link-text-color, #0f766e);
+  --dgc-border-active: var(--dgc-selected-accent-override, var(--ls-link-text-color, #0f766e));
+  --dgc-border-today: var(--dgc-today-accent-override, var(--ls-link-text-color, #0f766e));
   --dgc-text: var(--ls-primary-text-color, #0f172a);
   --dgc-muted: var(--ls-secondary-text-color, #475569);
   --dgc-accent: var(--ls-link-text-color, #0f766e);
   --dgc-accent-strong: var(--ls-link-text-color, #0f766e);
-  --dgc-today-accent: var(--ls-link-text-color, #0f766e);
+  --dgc-selected-accent: var(--dgc-selected-accent-override, var(--ls-link-text-color, #0f766e));
+  --dgc-today-accent: var(--dgc-today-accent-override, var(--ls-link-text-color, #0f766e));
   --dgc-chip-bg: var(--ls-secondary-background-color, var(--ls-primary-background-color, transparent));
   --dgc-chip-bg-alt: var(--ls-tertiary-background-color, var(--ls-secondary-background-color, var(--ls-primary-background-color, transparent)));
   --dgc-active-bg: color-mix(in srgb, var(--dgc-accent) 16%, var(--dgc-bg));
+  --dgc-selected-text: var(--dgc-selected-text-override, var(--ls-primary-background-color, #ffffff));
+  --dgc-today-bg: var(--dgc-today-bg-override, color-mix(in srgb, var(--dgc-today-accent) 32%, var(--dgc-bg)));
   --dgc-shadow: 0 3px 8px rgba(15, 23, 42, 0.05);
   display: block;
   container-type: inline-size;
@@ -35,16 +38,19 @@ html[data-theme="dark"] .dgc-pagebar {
   --dgc-bg-strong: color-mix(in srgb, var(--ls-secondary-background-color, var(--ls-primary-background-color, rgba(15, 23, 42, 0.92))) 82%, transparent);
   --dgc-border: var(--ls-border-color, rgba(255, 255, 255, 0.12));
   --dgc-border-hover: var(--ls-border-color, rgba(255, 255, 255, 0.18));
-  --dgc-border-active: var(--ls-link-text-color, #5eead4);
-  --dgc-border-today: var(--ls-link-text-color, #5eead4);
+  --dgc-border-active: var(--dgc-selected-accent-override, var(--ls-link-text-color, #5eead4));
+  --dgc-border-today: var(--dgc-today-accent-override, var(--ls-link-text-color, #5eead4));
   --dgc-text: var(--ls-primary-text-color, #e2e8f0);
   --dgc-muted: var(--ls-secondary-text-color, #94a3b8);
   --dgc-accent: var(--ls-link-text-color, #5eead4);
   --dgc-accent-strong: var(--ls-link-text-color, #5eead4);
-  --dgc-today-accent: var(--ls-link-text-color, #5eead4);
+  --dgc-selected-accent: var(--dgc-selected-accent-override, var(--ls-link-text-color, #5eead4));
+  --dgc-today-accent: var(--dgc-today-accent-override, var(--ls-link-text-color, #5eead4));
   --dgc-chip-bg: var(--ls-secondary-background-color, var(--ls-primary-background-color, transparent));
   --dgc-chip-bg-alt: var(--ls-tertiary-background-color, var(--ls-secondary-background-color, var(--ls-primary-background-color, transparent)));
   --dgc-active-bg: color-mix(in srgb, var(--dgc-accent) 16%, var(--dgc-bg));
+  --dgc-selected-text: var(--dgc-selected-text-override, var(--ls-primary-background-color, #ffffff));
+  --dgc-today-bg: var(--dgc-today-bg-override, color-mix(in srgb, var(--dgc-today-accent) 32%, var(--dgc-bg)));
   --dgc-shadow: 0 4px 10px rgba(2, 6, 23, 0.14);
 }
 
@@ -378,7 +384,7 @@ html[data-theme="dark"] .dgc-pagebar {
 }
 
 .dgc-month-day.is-weekend:not(.is-active) {
-  background: color-mix(in srgb, var(--dgc-accent) 20%, var(--dgc-bg));
+  background: color-mix(in srgb, var(--dgc-accent) 8%, var(--dgc-bg));
 }
 
 .dgc-month-day:first-child {
@@ -495,13 +501,13 @@ html[data-theme="dark"] .dgc-pagebar {
 }
 
 .dgc-day.is-active {
-  background: var(--dgc-accent);
+  background: var(--dgc-selected-accent);
   box-shadow: none;
   opacity: 1;
 }
 
 .dgc-day.is-today:not(.is-active) {
-  background: color-mix(in srgb, var(--dgc-today-accent) 32%, var(--dgc-bg));
+  background: var(--dgc-today-bg);
   box-shadow: none;
   opacity: 1;
 }
@@ -517,11 +523,11 @@ html[data-theme="dark"] .dgc-pagebar {
 }
 
 .dgc-day.is-active .dgc-day-date {
-  color: var(--ls-primary-background-color, #ffffff);
+  color: var(--dgc-selected-text);
 }
 
 .dgc-day.is-active .dgc-day-name {
-  color: var(--ls-primary-background-color, #ffffff);
+  color: var(--dgc-selected-text);
 }
 
 .dgc-day-name {
@@ -586,16 +592,16 @@ html[data-theme="dark"] .dgc-pagebar {
 }
 
 .dgc-day.is-active.has-journal .dgc-day-meta {
-  color: var(--ls-primary-background-color, #ffffff);
+  color: var(--dgc-selected-text);
 }
 
 .dgc-day.is-active .dgc-day-week,
 .dgc-day.is-active .dgc-day-meta {
-  color: var(--ls-primary-background-color, #ffffff);
+  color: var(--dgc-selected-text);
 }
 
 .dgc-day.is-today.is-active {
-  background: var(--dgc-accent);
+  background: var(--dgc-selected-accent);
   box-shadow: none;
 }
 
@@ -603,7 +609,7 @@ html[data-theme="dark"] .dgc-pagebar {
 .dgc-day.is-today.is-active .dgc-day-week,
 .dgc-day.is-today.is-active .dgc-day-name,
 .dgc-day.is-today.is-active .dgc-day-meta {
-  color: var(--ls-primary-background-color, #ffffff);
+  color: var(--dgc-selected-text);
 }
 
 @keyframes dgc-slide-forward {

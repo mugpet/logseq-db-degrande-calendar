@@ -3,11 +3,316 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Degrande Calendar v0.1.6</title>
-    <meta name="degrande-calendar-version" content="0.1.6">
+    <title>Degrande Calendar v0.1.7</title>
+    <meta name="degrande-calendar-version" content="0.1.7">
+    <style>
+      :root {
+        --dgc-panel-bg: rgba(248, 250, 255, 0.94);
+        --dgc-panel-bg-strong: rgba(255, 255, 255, 0.9);
+        --dgc-panel-border: rgba(148, 163, 184, 0.24);
+        --dgc-panel-text: #132033;
+        --dgc-panel-muted: #5d6c82;
+        --dgc-panel-accent: #10b981;
+        --dgc-panel-shadow: 0 24px 72px rgba(15, 23, 42, 0.18);
+        --dgc-panel-selected-preview: #10b981;
+        --dgc-panel-selected-text: #f8fafc;
+        --dgc-panel-today-preview: #10b981;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        font-family: Aptos, "Segoe UI Variable Text", "Segoe UI", sans-serif;
+        background: transparent;
+        color: var(--dgc-panel-text);
+      }
+
+      body {
+        overflow: hidden;
+      }
+
+      #app {
+        min-height: 100vh;
+      }
+
+      .dgc-settings-shell {
+        position: relative;
+        width: 100vw;
+        min-height: 100vh;
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-start;
+        padding: 18px;
+        box-sizing: border-box;
+        pointer-events: none;
+      }
+
+      .dgc-settings-window {
+        width: min(560px, calc(100vw - 24px));
+        max-height: calc(100vh - 36px);
+        overflow: auto;
+        border: 1px solid var(--dgc-panel-border);
+        border-radius: 20px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), var(--dgc-panel-bg));
+        box-shadow: var(--dgc-panel-shadow);
+        pointer-events: auto;
+      }
+
+      .dgc-settings-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 20px 20px 14px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+      }
+
+      .dgc-settings-eyebrow,
+      .dgc-settings-card-eyebrow,
+      .dgc-settings-palette-label,
+      .dgc-settings-field span {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--dgc-panel-muted);
+      }
+
+      .dgc-settings-title-row {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+      }
+
+      .dgc-settings-title-row h1,
+      .dgc-settings-card-head h2 {
+        margin: 0;
+      }
+
+      .dgc-settings-version,
+      .dgc-settings-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.12);
+        color: var(--dgc-panel-muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .dgc-settings-subtitle,
+      .dgc-settings-card-copy {
+        margin: 6px 0 0;
+        color: var(--dgc-panel-muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .dgc-settings-main {
+        display: grid;
+        gap: 14px;
+        padding: 14px 20px 20px;
+      }
+
+      .dgc-settings-card {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        border-radius: 16px;
+        background: var(--dgc-panel-bg-strong);
+      }
+
+      .dgc-settings-card-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: start;
+      }
+
+      .dgc-settings-button,
+      .dgc-settings-select,
+      .dgc-settings-text-input,
+      .dgc-settings-color-input {
+        font: inherit;
+      }
+
+      .dgc-settings-button {
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.9);
+        color: var(--dgc-panel-text);
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+
+      .dgc-settings-field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .dgc-settings-field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .dgc-settings-field-wide {
+        grid-column: 1 / -1;
+      }
+
+      .dgc-settings-select,
+      .dgc-settings-text-input {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 12px;
+        padding: 9px 10px;
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--dgc-panel-text);
+      }
+
+      .dgc-settings-preview-strip {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .dgc-settings-preview-day {
+        min-width: 64px;
+        display: grid;
+        justify-items: center;
+        gap: 2px;
+        padding: 8px 10px;
+        border: 0;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.88);
+        color: var(--dgc-panel-text);
+      }
+
+      .dgc-settings-preview-day.is-selected {
+        background: var(--dgc-panel-selected-preview);
+        color: var(--dgc-panel-selected-text);
+      }
+
+      .dgc-settings-preview-day.is-today {
+        background: color-mix(in srgb, var(--dgc-panel-today-preview) 24%, white);
+      }
+
+      .dgc-settings-preview-name,
+      .dgc-settings-preview-meta {
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .dgc-settings-preview-date {
+        font-size: 16px;
+        font-weight: 800;
+      }
+
+      .dgc-settings-swatch-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, 18px);
+        gap: 8px;
+      }
+
+      .dgc-settings-swatch-grid-wide {
+        grid-template-columns: repeat(auto-fit, 18px);
+      }
+
+      .dgc-settings-swatch {
+        width: 18px;
+        height: 18px;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        border-radius: 6px;
+        padding: 0;
+        background: var(--dgc-settings-swatch-color);
+        cursor: pointer;
+      }
+
+      .dgc-settings-swatch.is-active {
+        outline: 2px solid rgba(15, 118, 110, 0.2);
+      }
+
+      .dgc-settings-swatch.is-special {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 800;
+        color: #0f172a;
+      }
+
+      .dgc-settings-color-row {
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .dgc-settings-color-input {
+        width: 48px;
+        height: 42px;
+        padding: 0;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.92);
+        cursor: pointer;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --dgc-panel-bg: rgba(15, 23, 42, 0.94);
+          --dgc-panel-bg-strong: rgba(15, 23, 42, 0.88);
+          --dgc-panel-border: rgba(148, 163, 184, 0.2);
+          --dgc-panel-text: #e2e8f0;
+          --dgc-panel-muted: #94a3b8;
+          --dgc-panel-shadow: 0 24px 72px rgba(2, 6, 23, 0.42);
+        }
+
+        .dgc-settings-window,
+        .dgc-settings-button,
+        .dgc-settings-select,
+        .dgc-settings-text-input,
+        .dgc-settings-color-input,
+        .dgc-settings-card {
+          background: var(--dgc-panel-bg-strong);
+          color: var(--dgc-panel-text);
+        }
+
+        .dgc-settings-preview-day.is-today {
+          background: color-mix(in srgb, var(--dgc-panel-today-preview) 22%, rgba(15, 23, 42, 0.88));
+        }
+      }
+
+      @media (max-width: 720px) {
+        .dgc-settings-shell {
+          padding: 12px;
+        }
+
+        .dgc-settings-window {
+          width: calc(100vw - 24px);
+          max-height: calc(100vh - 24px);
+        }
+
+        .dgc-settings-header,
+        .dgc-settings-main {
+          padding-left: 14px;
+          padding-right: 14px;
+        }
+
+        .dgc-settings-field-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
   </head>
   <body>
-    <script src="./lsplugin.user.js?v=0.1.6"></script>
-    <script src="./plugin.js?v=0.1.6"></script>
+    <div id="app"></div>
+    <script src="./lsplugin.user.js?v=0.1.7"></script>
+    <script src="./plugin.js?v=0.1.7"></script>
   </body>
 </html>
