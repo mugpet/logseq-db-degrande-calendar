@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.15";
+const FALLBACK_PLUGIN_VERSION = "0.1.16";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -2541,7 +2541,7 @@ function syncCalendarRuntimeStyle() {
       --dgc-selected-accent-override: ${selectedAccent};
       --dgc-selected-text-override: ${selectedText};
       --dgc-today-accent-override: ${todayAccent};
-      --dgc-today-bg-override: color-mix(in srgb, ${getResolvedCalendarBaseCssValue("today")} ${getCalendarColorState("today")?.alpha ?? 32}%, var(--dgc-bg));
+      --dgc-today-bg-override: ${todayAccent};
       --dgc-today-text-override: ${todayText};
       --dgc-weekend-accent-override: ${weekendAccent};
       --dgc-weekend-bg-override: ${weekendAccent};
