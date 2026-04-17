@@ -416,9 +416,9 @@ html[data-theme="dark"] .dgc-pagebar {
   position: absolute;
   left: 2px;
   right: 2px;
-  bottom: 0;
+  bottom: 2px;
   height: 4px;
-  border-radius: 999px 999px 0 0;
+  border-radius: 20px;
   background: var(--dgc-today-month-border);
   pointer-events: none;
 }

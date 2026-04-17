@@ -1,6 +1,6 @@
 {
   "name": "degrande-calendar",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Degrande Calendar adds a week and month calendar bar to Logseq DB journals with fast day navigation and animated browsing.",
   "author": "mugpet",
   "license": "MIT",
