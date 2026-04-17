@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.18";
+const FALLBACK_PLUGIN_VERSION = "0.1.19";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -2189,9 +2189,6 @@ function buildCalendarTemplate({ mountMode, rootId }) {
           </div>
           <div class="dgc-month-header" data-role="month-header-row">
             ${Array.from({ length: 8 }, (_value, index) => buildMonthHeaderCellTemplate(index)).join("")}
-            <button class="dgc-month-minimize" type="button" data-action="toggle-month-minimize" data-role="month-minimize-btn" aria-label="Toggle month grid" title="Toggle month grid">
-              <span class="dgc-minimize-icon" aria-hidden="true">&minus;</span>
-            </button>
           </div>
           <div class="dgc-month-grid" data-role="month-grid">
             ${Array.from({ length: MAX_MONTH_WEEK_ROWS }, (_value, index) => buildMonthWeekBoxTemplate(index)).join("")}
@@ -2202,6 +2199,9 @@ function buildCalendarTemplate({ mountMode, rootId }) {
           <div class="dgc-footer-spacer" aria-hidden="true"></div>
           <div class="dgc-range" data-role="week-label"></div>
           <div class="dgc-actions" role="group" aria-label="Week navigation">
+            <button class="dgc-toggle" type="button" data-action="toggle-month-minimize" data-role="month-minimize-btn" aria-label="Toggle calendar days" title="Toggle calendar days">
+              <span class="dgc-toggle-icon" aria-hidden="true">&minus;</span>
+            </button>
             <button class="dgc-toggle" type="button" data-action="toggle-view" data-role="view-toggle" aria-label="Switch to month view" title="Switch to month view">
               <span class="dgc-toggle-icon" aria-hidden="true">▦</span>
             </button>
@@ -2682,11 +2682,11 @@ function renderWeekBar() {
     root.classList.toggle("is-week-view", state.viewMode === "week");
 
     if (refs?.weekStrip) {
-      refs.weekStrip.classList.toggle("is-hidden", state.viewMode !== "week" || !state.calendarExpanded);
+      refs.weekStrip.classList.toggle("is-hidden", state.viewMode !== "week" || !state.calendarExpanded || state.monthGridMinimized);
     }
 
     if (refs?.monthHeaderRow) {
-      refs.monthHeaderRow.classList.toggle("is-hidden", state.viewMode !== "month" || !state.calendarExpanded);
+      refs.monthHeaderRow.classList.toggle("is-hidden", state.viewMode !== "month" || !state.calendarExpanded || state.monthGridMinimized);
       for (let index = 0; index < 8; index += 1) {
         const monthHeaderCell = refs.monthHeaderCells[index];
 
@@ -2703,8 +2703,8 @@ function renderWeekBar() {
 
     if (refs?.monthMinimizeBtn) {
       refs.monthMinimizeBtn.innerHTML = state.monthGridMinimized 
-        ? '<span class="dgc-minimize-icon" aria-hidden="true">&#43;</span>' 
-        : '<span class="dgc-minimize-icon" aria-hidden="true">&minus;</span>';
+        ? '<span class="dgc-toggle-icon" aria-hidden="true">&#43;</span>' 
+        : '<span class="dgc-toggle-icon" aria-hidden="true">&minus;</span>';
     }
 
     if (refs?.monthGrid) {
