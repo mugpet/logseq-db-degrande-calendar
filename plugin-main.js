@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.19";
+const FALLBACK_PLUGIN_VERSION = "0.1.20";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -2200,7 +2200,7 @@ function buildCalendarTemplate({ mountMode, rootId }) {
           <div class="dgc-range" data-role="week-label"></div>
           <div class="dgc-actions" role="group" aria-label="Week navigation">
             <button class="dgc-toggle" type="button" data-action="toggle-month-minimize" data-role="month-minimize-btn" aria-label="Toggle calendar days" title="Toggle calendar days">
-              <span class="dgc-toggle-icon" aria-hidden="true">&minus;</span>
+              <span class="dgc-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s ease; transform: rotate(0deg);"><polyline points="18 15 12 9 6 15"></polyline></svg></span>
             </button>
             <button class="dgc-toggle" type="button" data-action="toggle-view" data-role="view-toggle" aria-label="Switch to month view" title="Switch to month view">
               <span class="dgc-toggle-icon" aria-hidden="true">▦</span>
@@ -2680,6 +2680,7 @@ function renderWeekBar() {
 
     root.classList.toggle("is-month-view", state.viewMode === "month");
     root.classList.toggle("is-week-view", state.viewMode === "week");
+    root.classList.toggle("is-minimized", state.monthGridMinimized);
 
     if (refs?.weekStrip) {
       refs.weekStrip.classList.toggle("is-hidden", state.viewMode !== "week" || !state.calendarExpanded || state.monthGridMinimized);
@@ -2702,9 +2703,8 @@ function renderWeekBar() {
     }
 
     if (refs?.monthMinimizeBtn) {
-      refs.monthMinimizeBtn.innerHTML = state.monthGridMinimized 
-        ? '<span class="dgc-toggle-icon" aria-hidden="true">&#43;</span>' 
-        : '<span class="dgc-toggle-icon" aria-hidden="true">&minus;</span>';
+      refs.monthMinimizeBtn.classList.toggle("is-minimized", state.monthGridMinimized);
+      refs.monthMinimizeBtn.innerHTML = '<span class="dgc-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s ease; transform: ' + (state.monthGridMinimized ? 'rotate(180deg)' : 'rotate(0deg)') + ';"><polyline points="18 15 12 9 6 15"></polyline></svg></span>';
     }
 
     if (refs?.monthGrid) {

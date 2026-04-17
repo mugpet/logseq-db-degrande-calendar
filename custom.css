@@ -745,3 +745,9 @@ html[data-theme="dark"] .dgc-pagebar {
   }
 }
 
+
+.dgc-pagebar.is-month-view.is-minimized .dgc-day-name,
+.dgc-pagebar.is-month-view.is-minimized .dgc-day-week {
+  display: none !important;
+}
+
