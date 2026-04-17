@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.17";
+const FALLBACK_PLUGIN_VERSION = "0.1.18";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -273,6 +273,7 @@ const state = {
   previewRequestToken: 0,
   viewMode: "week",
   calendarExpanded: true,
+  monthGridMinimized: false,
   selectedDayColorMode: "preset",
   selectedDayPresetToken: "acc-app-accent",
   selectedDayColor: "#10b981",
@@ -2188,6 +2189,9 @@ function buildCalendarTemplate({ mountMode, rootId }) {
           </div>
           <div class="dgc-month-header" data-role="month-header-row">
             ${Array.from({ length: 8 }, (_value, index) => buildMonthHeaderCellTemplate(index)).join("")}
+            <button class="dgc-month-minimize" type="button" data-action="toggle-month-minimize" data-role="month-minimize-btn" aria-label="Toggle month grid" title="Toggle month grid">
+              <span class="dgc-minimize-icon" aria-hidden="true">&minus;</span>
+            </button>
           </div>
           <div class="dgc-month-grid" data-role="month-grid">
             ${Array.from({ length: MAX_MONTH_WEEK_ROWS }, (_value, index) => buildMonthWeekBoxTemplate(index)).join("")}
@@ -2228,6 +2232,7 @@ function getRootRefs(root) {
     weekLabel: root.querySelector('[data-role="week-label"]'),
     contextLabel: root.querySelector('[data-role="context-label"]'),
     viewToggle: root.querySelector('[data-role="view-toggle"]'),
+    monthMinimizeBtn: root.querySelector('[data-role="month-minimize-btn"]'),
     weekStrip: root.querySelector('[data-role="week-strip"]'),
     monthHeaderRow: root.querySelector('[data-role="month-header-row"]'),
     monthGrid: root.querySelector('[data-role="month-grid"]'),
@@ -2302,6 +2307,13 @@ function bindRootEvents(root) {
 
     if (action === "toggle-view") {
       toggleViewMode();
+      return;
+    }
+
+    if (action === "toggle-month-minimize") {
+      state.monthGridMinimized = !state.monthGridMinimized;
+      hidePreview();
+      queueRender();
       return;
     }
 
@@ -2689,8 +2701,14 @@ function renderWeekBar() {
       }
     }
 
+    if (refs?.monthMinimizeBtn) {
+      refs.monthMinimizeBtn.innerHTML = state.monthGridMinimized 
+        ? '<span class="dgc-minimize-icon" aria-hidden="true">&#43;</span>' 
+        : '<span class="dgc-minimize-icon" aria-hidden="true">&minus;</span>';
+    }
+
     if (refs?.monthGrid) {
-      refs.monthGrid.classList.toggle("is-hidden", state.viewMode !== "month" || !state.calendarExpanded);
+      refs.monthGrid.classList.toggle("is-hidden", state.viewMode !== "month" || !state.calendarExpanded || state.monthGridMinimized);
 
       const monthStart = state.visibleMonthStart || startOfMonth(state.today);
       const visibleMonthWeekCount = getMonthWeekRowCount(monthStart);

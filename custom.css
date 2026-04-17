@@ -448,9 +448,36 @@ html[data-theme="dark"] .dgc-pagebar {
 
   .dgc-pagebar.is-month-view .dgc-month-header {
     display: grid;
+    position: relative;
     grid-template-columns: minmax(42px, auto) repeat(7, minmax(0, 1fr));
     border-bottom: 1px solid var(--dgc-border);
     background: var(--dgc-bg-strong);
+  }
+
+  .dgc-month-minimize {
+    position: absolute;
+    top: 50%;
+    right: 2px;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--dgc-muted);
+    background: transparent;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 150ms ease, color 150ms ease;
+  }
+
+  .dgc-month-minimize:hover {
+    background: var(--dgc-bg-hover);
+    color: var(--dgc-text);
   }
 
   .dgc-pagebar.is-month-view .dgc-month-header-cell {
