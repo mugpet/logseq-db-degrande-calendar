@@ -417,7 +417,7 @@ html[data-theme="dark"] .dgc-pagebar {
   left: 2px;
   right: 2px;
   bottom: 2px;
-  height: 1px;
+  height: 2px;
   border-radius: 20px;
   background: var(--dgc-today-month-border);
   pointer-events: none;
@@ -641,7 +641,8 @@ html[data-theme="dark"] .dgc-pagebar {
   color: var(--dgc-accent);
   background: transparent;
   opacity: 0;
-  transition: opacity 140ms ease, color 140ms ease;
+  transform: translateY(0);
+  transition: opacity 140ms ease, color 140ms ease, transform 140ms ease;
 }
 
 .dgc-day-meta:empty {
@@ -652,6 +653,7 @@ html[data-theme="dark"] .dgc-pagebar {
 
 .dgc-day.has-journal .dgc-day-meta {
   opacity: 1;
+  transform: translateY(-1px);
 }
 
 .dgc-day.is-active.has-journal .dgc-day-meta {
