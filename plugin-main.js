@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.23";
+const FALLBACK_PLUGIN_VERSION = "0.1.24";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -50,6 +50,10 @@ const VIEW_MODE_CHOICES = [
 const VISIBILITY_MODE_CHOICES = [
   "Everywhere",
   "Only journals and day pages",
+];
+const DOCK_MODE_CHOICES = [
+  "Above content",
+  "Right sidebar",
 ];
 const CALENDAR_COLOR_TARGETS = [
   {
@@ -249,6 +253,7 @@ const state = {
   visibleMonthStart: null,
   firstDayOfWeek: 1,
   visibilityMode: "everywhere",
+  dockMode: "content",
   lastSidebarPreviewId: null,
   today: startOfLocalDay(new Date()),
   isVisible: false,
@@ -685,12 +690,23 @@ function normalizeFirstDayOfWeek(value) {
   return 1;
 }
 
+function normalizeCalendarDockMode(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+
+  if (normalized === "right sidebar" || normalized === "sidebar") {
+    return "sidebar";
+  }
+
+  return "content";
+}
+
 function applyPluginSettings(settings) {
   state.firstDayOfWeek = normalizeFirstDayOfWeek(settings?.firstDayOfWeek);
   state.viewMode = settings?.calendarView === "Month" ? "month" : "week";
   state.visibilityMode = settings?.calendarVisibility === "Only journals and day pages"
     ? "journals-only"
     : "everywhere";
+  state.dockMode = normalizeCalendarDockMode(settings?.calendarDock);
   state.calendarExpanded = true;
   state.selectedDayColorMode = settings?.selectedDayColorMode === "preset" && getCalendarColorPreset(settings?.selectedDayPresetToken)
     ? "preset"
@@ -745,6 +761,27 @@ function setCalendarVisibilitySetting(nextValue) {
   state.visibilityMode = normalized === "Only journals and day pages" ? "journals-only" : "everywhere";
   persistPluginSetting({ calendarVisibility: normalized });
   void syncFromCurrentContext({ alignWeekToSelection: true });
+}
+
+function setCalendarDockSetting(nextValue) {
+  const normalizedMode = normalizeCalendarDockMode(nextValue);
+  const normalizedLabel = normalizedMode === "sidebar" ? DOCK_MODE_CHOICES[1] : DOCK_MODE_CHOICES[0];
+
+  state.dockMode = normalizedMode;
+  persistPluginSetting({ calendarDock: normalizedLabel });
+
+  if (normalizedMode === "sidebar") {
+    logseq.App.setRightSidebarVisible?.(true);
+  }
+
+  hidePreview();
+  ensureFallbackRoot();
+  queueLayoutUpdate();
+  queueRender();
+}
+
+function toggleCalendarDockSetting() {
+  setCalendarDockSetting(state.dockMode === "sidebar" ? "content" : "sidebar");
 }
 
 function setCalendarPresetColor(targetKey, token) {
@@ -2093,6 +2130,20 @@ function getViewToggleButtonState() {
   };
 }
 
+function getDockToggleButtonState() {
+  if (state.dockMode === "sidebar") {
+    return {
+      label: "Move calendar above content",
+      icon: '<span class="dgc-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M4 9h16"></path></svg></span>',
+    };
+  }
+
+  return {
+    label: "Move calendar to right sidebar",
+    icon: '<span class="dgc-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M16 4v16"></path></svg></span>',
+  };
+}
+
 function queueLayoutUpdate() {
   if (state.layoutTimer) {
     clearTimeout(state.layoutTimer);
@@ -2181,7 +2232,7 @@ function buildMonthWeekBoxTemplate(index) {
 
 function buildCalendarTemplate({ mountMode, rootId }) {
   return `
-    <section id="${rootId}" class="dgc-pagebar ${mountMode === "fallback" ? "dgc-pagebar-inline" : ""} is-hidden" data-mount-mode="${mountMode}" aria-label="Degrande Calendar week bar">
+    <section id="${rootId}" class="dgc-pagebar is-hidden" data-mount-mode="${mountMode}" aria-label="Degrande Calendar week bar">
       <div class="dgc-shell">
         <div class="dgc-weekframe">
           <div class="dgc-day-strip" data-role="week-strip">
@@ -2199,6 +2250,9 @@ function buildCalendarTemplate({ mountMode, rootId }) {
           <div class="dgc-footer-spacer" aria-hidden="true"></div>
           <div class="dgc-range" data-role="week-label"></div>
           <div class="dgc-actions" role="group" aria-label="Week navigation">
+            <button class="dgc-toggle" type="button" data-action="toggle-dock" data-role="dock-toggle" aria-label="Move calendar to right sidebar" title="Move calendar to right sidebar">
+              <span class="dgc-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M16 4v16"></path></svg></span>
+            </button>
             <button class="dgc-toggle" type="button" data-action="toggle-view" data-role="view-toggle" aria-label="Switch to month view" title="Switch to month view">
               <span class="dgc-toggle-icon" aria-hidden="true">▦</span>
             </button>
@@ -2231,6 +2285,7 @@ function getRootRefs(root) {
   const refs = {
     weekLabel: root.querySelector('[data-role="week-label"]'),
     contextLabel: root.querySelector('[data-role="context-label"]'),
+    dockToggle: root.querySelector('[data-role="dock-toggle"]'),
     viewToggle: root.querySelector('[data-role="view-toggle"]'),
     monthMinimizeBtn: root.querySelector('[data-role="month-minimize-btn"]'),
     weekStrip: root.querySelector('[data-role="week-strip"]'),
@@ -2310,6 +2365,11 @@ function bindRootEvents(root) {
       return;
     }
 
+    if (action === "toggle-dock") {
+      toggleCalendarDockSetting();
+      return;
+    }
+
     if (action === "toggle-month-minimize") {
       state.monthGridMinimized = !state.monthGridMinimized;
       hidePreview();
@@ -2351,7 +2411,7 @@ function openPageInSidebar(pageId) {
   logseq.Editor.openInRightSidebar(pageId);
 }
 
-function findFallbackAnchor() {
+function findContentFallbackAnchor() {
   const mainContentContainer = getMainContentContainer();
 
   if (mainContentContainer?.parentNode) {
@@ -2369,6 +2429,40 @@ function findFallbackAnchor() {
   }
 
   return null;
+}
+
+function getRightSidebarLayoutTarget() {
+  const hostDocument = getHostDocument();
+
+  return hostDocument.querySelector(".cp__right-sidebar .sidebar-item-list")
+    || hostDocument.querySelector(".cp__right-sidebar .sidebar-item-list-wrap")
+    || hostDocument.querySelector(".cp__right-sidebar .cp__right-sidebar-scroll")
+    || hostDocument.querySelector(".cp__right-sidebar")
+    || hostDocument.querySelector("[data-testid='right-sidebar']");
+}
+
+function findSidebarFallbackAnchor() {
+  let sidebarTarget = getRightSidebarLayoutTarget();
+
+  if (!sidebarTarget) {
+    logseq.App.setRightSidebarVisible?.(true);
+    sidebarTarget = getRightSidebarLayoutTarget();
+  }
+
+  if (!sidebarTarget) {
+    return null;
+  }
+
+  return {
+    parent: sidebarTarget,
+    before: sidebarTarget.firstChild || null,
+  };
+}
+
+function findFallbackAnchor() {
+  return state.dockMode === "sidebar"
+    ? findSidebarFallbackAnchor()
+    : findContentFallbackAnchor();
 }
 
 function ensureFallbackRoot() {
@@ -2399,8 +2493,14 @@ function ensureFallbackRoot() {
   return root;
 }
 
-function clearFallbackLayout() {
+function clearFallbackLayout(root = getHostDocument().getElementById(FALLBACK_ROOT_ID)) {
   const mainContentContainer = getMainContentContainer();
+
+  if (root) {
+    root.style.removeProperty("left");
+    root.style.removeProperty("top");
+    root.style.removeProperty("width");
+  }
 
   if (!mainContentContainer) {
     return;
@@ -2411,6 +2511,11 @@ function clearFallbackLayout() {
 }
 
 function updateFallbackRootLayout(root) {
+  if (state.dockMode !== "content") {
+    clearFallbackLayout(root);
+    return;
+  }
+
   const mainContentContainer = getMainContentContainer();
   const layoutTarget = getMainContentLayoutTarget();
 
@@ -2481,6 +2586,7 @@ function bindHostObserver() {
     if (state.isVisible) {
       ensureFallbackRoot();
       queueLayoutUpdate();
+      queueRender();
     }
   });
 
@@ -2644,18 +2750,26 @@ function renderWeekBar() {
 
   roots.forEach((root) => {
     const refs = getRootRefs(root);
+    const isFallbackRoot = root.dataset.mountMode === "fallback";
     const shouldShowRoot = Boolean(
       state.isVisible
       && state.calendarExpanded
       && state.visibleWeekStart
-      && !(hasFallbackRoot && root.dataset.mountMode === "pagebar")
+      && (
+        isFallbackRoot
+          || (state.dockMode !== "sidebar" && !hasFallbackRoot)
+      )
     );
+
+    setDatasetIfChanged(root, "dockMode", isFallbackRoot ? state.dockMode : "pagebar");
+    root.classList.toggle("dgc-pagebar-inline", isFallbackRoot && state.dockMode === "content");
+    root.classList.toggle("dgc-pagebar-sidebar", isFallbackRoot && state.dockMode === "sidebar");
 
     root.classList.toggle("is-hidden", !shouldShowRoot);
 
     if (!shouldShowRoot) {
-      if (root.dataset.mountMode === "fallback") {
-        clearFallbackLayout();
+      if (isFallbackRoot) {
+        clearFallbackLayout(root);
       }
 
       return;
@@ -2676,6 +2790,14 @@ function renderWeekBar() {
       setHtmlIfChanged(refs.viewToggle, toggleState.icon);
       setAttributeIfChanged(refs.viewToggle, "aria-label", toggleState.label);
       setAttributeIfChanged(refs.viewToggle, "title", toggleState.label);
+    }
+
+    if (refs?.dockToggle) {
+      const toggleState = getDockToggleButtonState();
+      setHtmlIfChanged(refs.dockToggle, toggleState.icon);
+      setAttributeIfChanged(refs.dockToggle, "aria-label", toggleState.label);
+      setAttributeIfChanged(refs.dockToggle, "title", toggleState.label);
+      refs.dockToggle.classList.toggle("is-active", state.dockMode === "sidebar");
     }
 
     root.classList.toggle("is-month-view", state.viewMode === "month");
@@ -2879,7 +3001,7 @@ function renderWeekBar() {
       animateWeekStrip(root, state.pendingAnimationDirection);
     }
 
-    if (root.dataset.mountMode === "fallback") {
+    if (isFallbackRoot) {
       updateFallbackRootLayout(root);
     }
   });
