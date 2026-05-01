@@ -176,10 +176,10 @@ html[data-theme="dark"] .dgc-pagebar {
 }
 
 .dgc-pagebar-sidebar {
-  position: relative;
+  position: sticky;
   left: auto;
-  top: auto;
-  z-index: auto;
+  top: 0;
+  z-index: 8;
   width: 100%;
   margin: 0 0 12px;
   pointer-events: auto;
@@ -345,7 +345,7 @@ html[data-theme="dark"] .dgc-pagebar {
 
 .dgc-month-grid {
   display: grid;
-  grid-template-columns: repeat(31, minmax(0, 1fr));
+  grid-template-columns: repeat(42, minmax(0, 1fr));
   gap: 0;
   width: 100%;
   min-width: 0;
@@ -409,6 +409,17 @@ html[data-theme="dark"] .dgc-pagebar {
 
 .dgc-month-day.is-weekend:not(.is-active) {
   background: var(--dgc-weekend-bg);
+}
+
+.dgc-month-day.is-outside-month:not(.is-active):not(.is-today) {
+  background: color-mix(in srgb, var(--dgc-chip-bg) 72%, transparent);
+}
+
+.dgc-month-day.is-outside-month:not(.is-active):not(.is-today) .dgc-day-date,
+.dgc-month-day.is-outside-month:not(.is-active):not(.is-today) .dgc-day-week,
+.dgc-month-day.is-outside-month:not(.is-active):not(.is-today) .dgc-day-name,
+.dgc-month-day.is-outside-month:not(.is-active):not(.is-today) .dgc-day-meta {
+  color: var(--dgc-muted);
 }
 
 .dgc-day.is-weekend:not(.is-active):not(.is-today) .dgc-day-date,

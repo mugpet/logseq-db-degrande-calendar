@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.24";
+const FALLBACK_PLUGIN_VERSION = "0.1.25";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -37,7 +37,7 @@ const RANGE_MONTH_DAY_FORMATTER = new Intl.DateTimeFormat(undefined, { month: "s
 const RANGE_DAY_FORMATTER = new Intl.DateTimeFormat(undefined, { day: "numeric" });
 const RANGE_MONTH_DAY_YEAR_FORMATTER = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" });
 const MONTH_LABEL_FORMATTER = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" });
-const MAX_MONTH_BUTTONS = 31;
+const MAX_MONTH_BUTTONS = MAX_MONTH_WEEK_ROWS * 7;
 const MAX_MONTH_WEEK_ROWS = 6;
 const FIRST_DAY_CHOICES = [
   "Sunday",
@@ -907,16 +907,22 @@ function getMonthGridColumnStart(date) {
   return ((normalizedDate.getDay() - state.firstDayOfWeek + 7) % 7) + 1;
 }
 
+function getMonthGridStartDate(monthStart) {
+  return startOfWeek(monthStart);
+}
+
 function getMonthGridRow(date, monthStart) {
-  const columnStart = getMonthGridColumnStart(monthStart);
-  const dayOffset = startOfLocalDay(date).getDate() - 1;
-  return Math.floor((columnStart - 1 + dayOffset) / 7) + 1;
+  const normalizedDate = startOfLocalDay(date);
+  const gridStart = getMonthGridStartDate(monthStart);
+  const dayOffset = Math.round((normalizedDate.getTime() - gridStart.getTime()) / 86400000);
+  return Math.floor(dayOffset / 7) + 1;
 }
 
 function getMonthGridColumn(date, monthStart) {
-  const columnStart = getMonthGridColumnStart(monthStart);
-  const dayOffset = startOfLocalDay(date).getDate() - 1;
-  return ((columnStart - 1 + dayOffset) % 7) + 2;
+  const normalizedDate = startOfLocalDay(date);
+  const gridStart = getMonthGridStartDate(monthStart);
+  const dayOffset = Math.round((normalizedDate.getTime() - gridStart.getTime()) / 86400000);
+  return (dayOffset % 7) + 2;
 }
 
 function getMonthWeekRowCount(monthStart) {
@@ -1642,8 +1648,9 @@ function getVisibleWeekDates() {
 
 function getVisibleMonthDates() {
   const monthStart = state.visibleMonthStart || startOfMonth(state.currentJournalDate || state.visibleWeekStart || state.today);
-  const totalDays = endOfMonth(monthStart).getDate();
-  return Array.from({ length: totalDays }, (_value, index) => addDays(monthStart, index));
+  const gridStart = getMonthGridStartDate(monthStart);
+  const totalDays = getMonthWeekRowCount(monthStart) * 7;
+  return Array.from({ length: totalDays }, (_value, index) => addDays(gridStart, index));
 }
 
 function getVisibleDates() {
@@ -2922,10 +2929,12 @@ function renderWeekBar() {
       const dayWeek = refs.monthDayWeeks[index];
       const dayDate = refs.monthDayDates[index];
       const dayMeta = refs.monthDayMetas[index];
+      const visibleMonthStart = state.visibleMonthStart || startOfMonth(date);
       const isActive = Boolean(activeDate && isSameDay(activeDate, date));
       const isToday = isSameDay(state.today, date);
       const hasJournal = Boolean(state.journalPresence[getDayKey(date)]);
       const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+      const isOutsideMonth = !isSameMonth(date, visibleMonthStart);
       const journalPage = state.journalPages[getDayKey(date)] || null;
       const journalPageId = String(journalPage?.uuid || journalPage?.id || "");
 
@@ -2957,14 +2966,14 @@ function renderWeekBar() {
         button.classList.toggle("has-journal", hasJournal);
         button.classList.toggle("is-today", isToday);
         button.classList.toggle("is-weekend", isWeekend);
+        button.classList.toggle("is-outside-month", isOutsideMonth);
         button.style.setProperty("--dgc-month-grid-start", String(getMonthGridColumnStart(date)));
-        button.style.setProperty("--dgc-month-grid-column", String(getMonthGridColumn(date, state.visibleMonthStart || startOfMonth(date))));
-        button.style.setProperty("--dgc-month-grid-row", String(getMonthGridRow(date, state.visibleMonthStart || startOfMonth(date))));
+        button.style.setProperty("--dgc-month-grid-column", String(getMonthGridColumn(date, visibleMonthStart)));
+        button.style.setProperty("--dgc-month-grid-row", String(getMonthGridRow(date, visibleMonthStart)));
         setAttributeIfChanged(button, "aria-pressed", String(isActive));
         setAttributeIfChanged(button, "aria-label", FULL_DATE_FORMATTER.format(date));
         setDatasetIfChanged(button, "dateValue", date.getTime());
         setDatasetIfChanged(button, "pageId", hasJournal ? journalPageId : "");
-        button.classList.remove("is-outside-month");
         button.onmouseenter = null;
         button.onmouseleave = null;
       }
