@@ -172,6 +172,7 @@ html[data-theme="dark"] .dgc-pagebar {
 }
 
 .dgc-pagebar-inline .dgc-shell {
+  width: 100%;
   pointer-events: auto;
 }
 
@@ -437,7 +438,7 @@ html[data-theme="dark"] .dgc-pagebar {
 }
 
 .dgc-month-day.is-outside-month.is-weekend:not(.is-active):not(.is-today) {
-  background: color-mix(in srgb, var(--dgc-chip-bg) 72%, transparent);
+  background: color-mix(in srgb, var(--dgc-weekend-bg) 58%, var(--dgc-chip-bg) 42%);
 }
 
 .dgc-month-day.is-outside-month.is-weekend:not(.is-active):not(.is-today) .dgc-day-date,
