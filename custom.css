@@ -436,6 +436,21 @@ html[data-theme="dark"] .dgc-pagebar {
   color: var(--dgc-weekend-text);
 }
 
+.dgc-month-day.is-outside-month.is-weekend:not(.is-active):not(.is-today) {
+  background: color-mix(in srgb, var(--dgc-chip-bg) 72%, transparent);
+}
+
+.dgc-month-day.is-outside-month.is-weekend:not(.is-active):not(.is-today) .dgc-day-date,
+.dgc-month-day.is-outside-month.is-weekend:not(.is-active):not(.is-today) .dgc-day-week,
+.dgc-month-day.is-outside-month.is-weekend:not(.is-active):not(.is-today) .dgc-day-name,
+.dgc-month-day.is-outside-month.is-weekend:not(.is-active):not(.is-today) .dgc-day-meta,
+.dgc-month-day.is-outside-month.is-weekend:not(.is-active):not(.is-today):hover .dgc-day-date,
+.dgc-month-day.is-outside-month.is-weekend:not(.is-active):not(.is-today):hover .dgc-day-week,
+.dgc-month-day.is-outside-month.is-weekend:not(.is-active):not(.is-today):hover .dgc-day-name,
+.dgc-month-day.is-outside-month.is-weekend:not(.is-active):not(.is-today):hover .dgc-day-meta {
+  color: var(--dgc-muted);
+}
+
 .dgc-pagebar.is-month-view .dgc-month-day.is-today::after {
   content: "";
   position: absolute;
