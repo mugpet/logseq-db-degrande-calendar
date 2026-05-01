@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.25";
+const FALLBACK_PLUGIN_VERSION = "0.1.26";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -37,8 +37,8 @@ const RANGE_MONTH_DAY_FORMATTER = new Intl.DateTimeFormat(undefined, { month: "s
 const RANGE_DAY_FORMATTER = new Intl.DateTimeFormat(undefined, { day: "numeric" });
 const RANGE_MONTH_DAY_YEAR_FORMATTER = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" });
 const MONTH_LABEL_FORMATTER = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" });
-const MAX_MONTH_BUTTONS = MAX_MONTH_WEEK_ROWS * 7;
 const MAX_MONTH_WEEK_ROWS = 6;
+const MAX_MONTH_BUTTONS = MAX_MONTH_WEEK_ROWS * 7;
 const FIRST_DAY_CHOICES = [
   "Sunday",
   "Monday",
