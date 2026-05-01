@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.28";
+const FALLBACK_PLUGIN_VERSION = "0.1.29";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -2844,6 +2844,7 @@ function renderWeekBar() {
 
       const monthStart = state.visibleMonthStart || startOfMonth(state.today);
       const visibleMonthWeekCount = getMonthWeekRowCount(monthStart);
+      refs.monthGrid.style.setProperty("--dgc-month-visible-days", String(monthDates.length));
 
       for (let index = 0; index < MAX_MONTH_WEEK_ROWS; index += 1) {
         const monthWeekBox = refs.monthWeekBoxes[index];
