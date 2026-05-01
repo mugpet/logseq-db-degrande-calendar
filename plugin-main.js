@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.29";
+const FALLBACK_PLUGIN_VERSION = "0.1.30";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -700,6 +700,16 @@ function normalizeCalendarDockMode(value) {
   return "content";
 }
 
+function applyDockModeViewDefaults() {
+  if (state.dockMode !== "sidebar" || state.viewMode === "month") {
+    return;
+  }
+
+  state.viewMode = "month";
+  state.visibleMonthStart = startOfMonth(state.currentJournalDate || state.visibleWeekStart || state.today);
+  state.visibleWeekStart = startOfWeek(state.visibleMonthStart);
+}
+
 function applyPluginSettings(settings) {
   state.firstDayOfWeek = normalizeFirstDayOfWeek(settings?.firstDayOfWeek);
   state.viewMode = settings?.calendarView === "Month" ? "month" : "week";
@@ -707,6 +717,7 @@ function applyPluginSettings(settings) {
     ? "journals-only"
     : "everywhere";
   state.dockMode = normalizeCalendarDockMode(settings?.calendarDock);
+  applyDockModeViewDefaults();
   state.calendarExpanded = true;
   state.selectedDayColorMode = settings?.selectedDayColorMode === "preset" && getCalendarColorPreset(settings?.selectedDayPresetToken)
     ? "preset"
@@ -768,6 +779,7 @@ function setCalendarDockSetting(nextValue) {
   const normalizedLabel = normalizedMode === "sidebar" ? DOCK_MODE_CHOICES[1] : DOCK_MODE_CHOICES[0];
 
   state.dockMode = normalizedMode;
+  applyDockModeViewDefaults();
   persistPluginSetting({ calendarDock: normalizedLabel });
 
   if (normalizedMode === "sidebar") {
@@ -775,6 +787,7 @@ function setCalendarDockSetting(nextValue) {
   }
 
   hidePreview();
+  syncCalendarSettingsPanel();
   ensureFallbackRoot();
   queueLayoutUpdate();
   queueRender();
