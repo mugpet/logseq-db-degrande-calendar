@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.30";
+const FALLBACK_PLUGIN_VERSION = "0.1.31";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -2485,6 +2485,29 @@ function findFallbackAnchor() {
     : findContentFallbackAnchor();
 }
 
+// True when the calendar's fallback root is present and sits at its anchor.
+// Used to keep the host observer change-driven: the data the calendar shows
+// only changes via route/page/journal/theme events (each calls queueRender
+// directly), so on arbitrary host mutations we only need to repair the mount.
+function isCalendarMountIntact() {
+  const hostDocument = getHostDocument();
+  const anchor = findFallbackAnchor();
+
+  if (!anchor?.parent) {
+    // No anchor available right now; a context sync will remount when it returns.
+    return true;
+  }
+
+  const root = hostDocument.getElementById(FALLBACK_ROOT_ID);
+
+  if (!root) {
+    return false;
+  }
+
+  return root.parentNode === anchor.parent
+    && root.nextSibling === (anchor.before || null);
+}
+
 function ensureFallbackRoot() {
   const hostDocument = getHostDocument();
   const anchor = findFallbackAnchor();
@@ -2604,9 +2627,15 @@ function bindHostObserver() {
     }
 
     if (state.isVisible) {
-      ensureFallbackRoot();
+      // Keep layout in sync cheaply on host churn, but do NOT re-render the whole
+      // week bar on every unrelated mutation — that caused constant on-screen
+      // updates. Only remount + render when the calendar mount is actually broken.
       queueLayoutUpdate();
-      queueRender();
+
+      if (!isCalendarMountIntact()) {
+        ensureFallbackRoot();
+        queueRender();
+      }
     }
   });
 
