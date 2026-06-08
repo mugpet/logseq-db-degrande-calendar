@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.33";
+const FALLBACK_PLUGIN_VERSION = "0.1.34";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -2602,40 +2602,6 @@ function updateFallbackRootLayout(root) {
   }
 }
 
-// Debounced handler for host DOM churn (block virtualization, other plugins).
-// Collapses mutation storms during scroll into a single mount/layout check so we
-// never run findFallbackAnchor()/getBoundingClientRect() per mutation batch.
-function scheduleHostObserverSync() {
-  if (state.hostObserverTimer) {
-    return;
-  }
-
-  state.hostObserverTimer = setTimeout(() => {
-    state.hostObserverTimer = null;
-
-    if (Date.now() < state.freezeObserverUntil) {
-      return;
-    }
-
-    if (!state.isVisible) {
-      if (shouldShowCalendarForCurrentContext()) {
-        scheduleDomContextSync();
-      }
-      return;
-    }
-
-    // Visible + mounted: do NOTHING on idle host churn. The calendar's data only
-    // changes via route/page/journal/theme events (each calls queueRender), and
-    // its position is tracked by the scroll/resize listeners. The observer's only
-    // job here is to repair the mount if Logseq tore our root out of the DOM.
-    if (!isCalendarMountIntact()) {
-      ensureFallbackRoot();
-      queueLayoutUpdate();
-      queueRender();
-    }
-  }, 150);
-}
-
 // Scroll only matters for the content-docked bar, which tracks main-content
 // position. When hidden or sidebar-docked, bail before doing any work.
 function handleHostScroll() {
@@ -2655,32 +2621,19 @@ function bindHostObserver() {
 
   const hostDocument = getHostDocument();
 
-  if (!hostDocument?.body || typeof MutationObserver !== "function") {
+  if (!hostDocument?.body) {
     return;
   }
 
-  const observer = new MutationObserver((mutations) => {
-    if (!hasRelevantHostMutation(mutations || [])) {
-      return;
-    }
-
-    // Logseq virtualizes long pages, so scrolling fires a storm of childList
-    // mutations. Do NOT run findFallbackAnchor/getBoundingClientRect work per
-    // mutation batch — collapse the storm into one debounced sync.
-    scheduleHostObserverSync();
-  });
-
-  observer.observe(hostDocument.body, {
-    childList: true,
-    subtree: true,
-  });
-
-  // Passive + gated: when the calendar is hidden or docked in the sidebar there
-  // is no content-relative bar to reposition, so scrolling must cost ~nothing.
+  // No MutationObserver. Watching Logseq's body subtree means paying a tax on
+  // every virtualization/scroll/edit mutation, and any of our own layout writes
+  // can feed back into it. The calendar's data and mount are driven entirely by
+  // app events (onRouteChanged/onThemeModeChanged/onTodayJournalCreated) plus
+  // the gated scroll/resize listeners below — no continuous observation needed.
   hostDocument.addEventListener("scroll", handleHostScroll, { capture: true, passive: true });
   hostWindow.addEventListener("resize", queueLayoutUpdate);
 
-  hostWindow[HOST_OBSERVER_KEY] = observer;
+  hostWindow[HOST_OBSERVER_KEY] = true;
 }
 
 function registerCommandPaletteSafely(config, handler) {
@@ -3302,6 +3255,10 @@ function bindAppEvents() {
       state.freezeObserverUntil = 0;
       state.route = route || { path: "", template: "" };
       void syncFromCurrentContext({ alignWeekToSelection: true });
+      // Logseq may rebuild main content slightly after the route event, which can
+      // drop our mount. With the host MutationObserver removed, re-sync once more
+      // shortly after so the bar re-mounts if its anchor was rebuilt.
+      scheduleDomContextSync();
     });
   }
 
