@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.31";
+const FALLBACK_PLUGIN_VERSION = "0.1.32";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -259,6 +259,7 @@ const state = {
   isVisible: false,
   renderTimer: null,
   layoutTimer: null,
+  hostObserverTimer: null,
   syncToken: 0,
   pendingAnimationDirection: 0,
   navigationToken: 0,
@@ -2599,6 +2600,49 @@ function updateFallbackRootLayout(root) {
   }
 }
 
+// Debounced handler for host DOM churn (block virtualization, other plugins).
+// Collapses mutation storms during scroll into a single mount/layout check so we
+// never run findFallbackAnchor()/getBoundingClientRect() per mutation batch.
+function scheduleHostObserverSync() {
+  if (state.hostObserverTimer) {
+    return;
+  }
+
+  state.hostObserverTimer = setTimeout(() => {
+    state.hostObserverTimer = null;
+
+    if (Date.now() < state.freezeObserverUntil) {
+      return;
+    }
+
+    if (!state.isVisible && shouldShowCalendarForCurrentContext()) {
+      scheduleDomContextSync();
+      return;
+    }
+
+    if (state.isVisible) {
+      // Only remount + render when the mount is actually broken; otherwise just
+      // keep the content-docked bar position in sync.
+      queueLayoutUpdate();
+
+      if (!isCalendarMountIntact()) {
+        ensureFallbackRoot();
+        queueRender();
+      }
+    }
+  }, 150);
+}
+
+// Scroll only matters for the content-docked bar, which tracks main-content
+// position. When hidden or sidebar-docked, bail before doing any work.
+function handleHostScroll() {
+  if (!state.isVisible || state.dockMode !== "content") {
+    return;
+  }
+
+  queueLayoutUpdate();
+}
+
 function bindHostObserver() {
   const hostWindow = getHostWindow();
 
@@ -2617,26 +2661,10 @@ function bindHostObserver() {
       return;
     }
 
-    if (Date.now() < state.freezeObserverUntil) {
-      return;
-    }
-
-    if (!state.isVisible && shouldShowCalendarForCurrentContext()) {
-      scheduleDomContextSync();
-      return;
-    }
-
-    if (state.isVisible) {
-      // Keep layout in sync cheaply on host churn, but do NOT re-render the whole
-      // week bar on every unrelated mutation — that caused constant on-screen
-      // updates. Only remount + render when the calendar mount is actually broken.
-      queueLayoutUpdate();
-
-      if (!isCalendarMountIntact()) {
-        ensureFallbackRoot();
-        queueRender();
-      }
-    }
+    // Logseq virtualizes long pages, so scrolling fires a storm of childList
+    // mutations. Do NOT run findFallbackAnchor/getBoundingClientRect work per
+    // mutation batch — collapse the storm into one debounced sync.
+    scheduleHostObserverSync();
   });
 
   observer.observe(hostDocument.body, {
@@ -2644,7 +2672,9 @@ function bindHostObserver() {
     subtree: true,
   });
 
-  hostDocument.addEventListener("scroll", queueLayoutUpdate, true);
+  // Passive + gated: when the calendar is hidden or docked in the sidebar there
+  // is no content-relative bar to reposition, so scrolling must cost ~nothing.
+  hostDocument.addEventListener("scroll", handleHostScroll, { capture: true, passive: true });
   hostWindow.addEventListener("resize", queueLayoutUpdate);
 
   hostWindow[HOST_OBSERVER_KEY] = observer;
