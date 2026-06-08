@@ -1,5 +1,5 @@
 (() => {
-const FALLBACK_PLUGIN_VERSION = "0.1.32";
+const FALLBACK_PLUGIN_VERSION = "0.1.33";
 const PAGEBAR_ITEM_KEY = "degrande-calendar-weekbar";
 const TOOLBAR_ITEM_KEY = "degrande-calendar-toggle";
 const PAGEBAR_ROOT_ID = "degrande-calendar-pagebar";
@@ -2592,7 +2592,9 @@ function updateFallbackRootLayout(root) {
   const shell = getRootRefs(root)?.weekStrip?.closest(".dgc-shell") || root.querySelector(".dgc-shell");
   const offset = Math.max(0, Math.ceil((shell?.offsetHeight || 0) + 18));
 
-  mainContentContainer.setAttribute("data-dgc-sibling-offset", "true");
+  if (mainContentContainer.getAttribute("data-dgc-sibling-offset") !== "true") {
+    mainContentContainer.setAttribute("data-dgc-sibling-offset", "true");
+  }
   const nextOffset = `${offset}px`;
 
   if (mainContentContainer.style.getPropertyValue("--dgc-sibling-offset") !== nextOffset) {
@@ -2615,20 +2617,21 @@ function scheduleHostObserverSync() {
       return;
     }
 
-    if (!state.isVisible && shouldShowCalendarForCurrentContext()) {
-      scheduleDomContextSync();
+    if (!state.isVisible) {
+      if (shouldShowCalendarForCurrentContext()) {
+        scheduleDomContextSync();
+      }
       return;
     }
 
-    if (state.isVisible) {
-      // Only remount + render when the mount is actually broken; otherwise just
-      // keep the content-docked bar position in sync.
+    // Visible + mounted: do NOTHING on idle host churn. The calendar's data only
+    // changes via route/page/journal/theme events (each calls queueRender), and
+    // its position is tracked by the scroll/resize listeners. The observer's only
+    // job here is to repair the mount if Logseq tore our root out of the DOM.
+    if (!isCalendarMountIntact()) {
+      ensureFallbackRoot();
       queueLayoutUpdate();
-
-      if (!isCalendarMountIntact()) {
-        ensureFallbackRoot();
-        queueRender();
-      }
+      queueRender();
     }
   }, 150);
 }
